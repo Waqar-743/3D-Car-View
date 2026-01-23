@@ -32,7 +32,26 @@ const F1CarIcon: React.FC<{ className?: string; style?: React.CSSProperties }> =
 
 export const LoadingOverlay: React.FC = () => {
   const { isLoading, loadingProgress } = useCarStore();
+  const [statusText, setStatusText] = React.useState('INITIALIZING SYSTEMS');
   
+  React.useEffect(() => {
+    const statuses = [
+      'CALIBRATING SENSORS',
+      'OPTIMIZING AERODYNAMICS',
+      'WARMING TIRES',
+      'FUELING ENGINE',
+      'CHECKING TELEMETRY',
+      'READY FOR TRACK'
+    ];
+    
+    if (loadingProgress < 20) setStatusText(statuses[0]);
+    else if (loadingProgress < 40) setStatusText(statuses[1]);
+    else if (loadingProgress < 60) setStatusText(statuses[2]);
+    else if (loadingProgress < 80) setStatusText(statuses[3]);
+    else if (loadingProgress < 95) setStatusText(statuses[4]);
+    else setStatusText(statuses[5]);
+  }, [loadingProgress]);
+
   if (!isLoading) return null;
   
   return (
@@ -40,109 +59,99 @@ export const LoadingOverlay: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="absolute inset-0 z-50 flex flex-col items-center justify-between"
+      transition={{ duration: 0.5 }}
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%)',
+        background: 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)',
       }}
     >
-      {/* Top spacer */}
-      <div className="flex-1" />
-      
-      {/* Center - "Are You Ready?" Heading */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="flex-1 flex flex-col items-center justify-center px-4"
-      >
-        <h1 
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-wider text-center"
-          style={{ 
-            color: '#FFFFFF',
-            textShadow: '0 0 30px rgba(255, 255, 255, 0.5), 0 0 60px rgba(255, 255, 255, 0.3)',
-            fontFamily: 'Montserrat, sans-serif',
-          }}
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center justify-center px-4 max-w-4xl w-full">
+        {/* Logo/Icon */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="mb-8"
         >
-          Are You Ready?
-        </h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-          className="mt-2 sm:mt-4 text-sm sm:text-base md:text-lg lg:text-xl tracking-wide text-center"
-          style={{ 
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontFamily: 'Montserrat, sans-serif',
-          }}
+          <F1CarIcon className="w-24 h-12 md:w-32 md:h-16" style={{ color: '#D4AF37' }} />
+        </motion.div>
+
+        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-center mb-12"
         >
-          Experience engineering perfection
-        </motion.p>
-      </motion.div>
-      
-      {/* Bottom - Loader near footer */}
-      <div className="w-full px-4 sm:px-8 pb-8 sm:pb-16">
-        <div className="max-w-md sm:max-w-lg md:max-w-2xl mx-auto">
-          {/* F1 Car driving across the screen - Hidden on very small screens for performance */}
-          <div className="relative h-10 sm:h-12 mb-3 sm:mb-4 hidden sm:block">
-            <motion.div
-              className="absolute top-1/2 -translate-y-1/2"
-              style={{ 
-                left: `${Math.max(0, Math.min(loadingProgress - 5, 95))}%`,
-                filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.8))',
-              }}
-              initial={{ left: '0%' }}
-              animate={{ 
-                left: `${Math.max(0, Math.min(loadingProgress - 5, 95))}%`,
-              }}
-              transition={{ 
-                duration: 0.3, 
-                ease: 'easeOut',
-              }}
-            >
-              <F1CarIcon className="w-10 h-5 sm:w-14 sm:h-7" style={{ color: '#D4AF37' }} />
-              
-              {/* Speed lines behind car - Simplified */}
-              <div className="absolute right-full top-1/2 -translate-y-1/2 flex flex-col gap-0.5 pr-1">
-                <div className="w-6 sm:w-10 h-0.5 rounded" style={{ background: 'linear-gradient(to left, #D4AF37, transparent)' }} />
-                <div className="w-4 sm:w-7 h-0.5 rounded" style={{ background: 'linear-gradient(to left, #D4AF37, transparent)' }} />
-              </div>
-            </motion.div>
-          </div>
-          
-          {/* Progress Bar - Full width, bright */}
-          <div 
-            className="h-1 sm:h-1.5 rounded-full overflow-hidden"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
+          <h1 
+            className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tighter mb-4"
+            style={{ 
+              color: '#FFFFFF',
+              fontFamily: "'Playfair Display', serif",
+              letterSpacing: '-0.02em'
             }}
           >
+            PRECISION <span className="text-[#D4AF37]">ENGINEERING</span>
+          </h1>
+          <p className="text-[#D4AF37] font-mono tracking-[0.3em] text-xs md:text-sm uppercase opacity-80">
+            Automotive Visualization Studio
+          </p>
+        </motion.div>
+        
+        {/* Progress Section */}
+        <div className="w-full max-w-md">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-[10px] md:text-xs font-mono text-white/40 tracking-widest uppercase">
+              {statusText}
+            </span>
+            <span className="text-xl md:text-2xl font-mono text-[#D4AF37] tabular-nums font-light">
+              {Math.round(loadingProgress)}%
+            </span>
+          </div>
+          
+          <div className="h-[2px] w-full bg-white/10 relative overflow-hidden">
             <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: '#D4AF37',
-                boxShadow: '0 0 15px rgba(212, 175, 55, 0.6)',
-              }}
+              className="absolute top-0 left-0 h-full bg-[#D4AF37]"
               initial={{ width: 0 }}
               animate={{ width: `${loadingProgress}%` }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                boxShadow: '0 0 10px #D4AF37'
+              }}
             />
           </div>
           
-          {/* Progress Percentage */}
-          <div className="flex justify-center items-center mt-3 sm:mt-4">
-            <p 
-              className="text-xl sm:text-2xl md:text-3xl font-bold font-mono"
-              style={{ 
-                color: '#D4AF37',
-                textShadow: '0 0 15px rgba(212, 175, 55, 0.6)',
-                fontFamily: 'Montserrat, sans-serif',
-              }}
-            >
-              {loadingProgress}%
-            </p>
+          <div className="mt-8 flex justify-center">
+             <div className="flex gap-1">
+                {[...Array(10)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{
+                      opacity: loadingProgress > (i * 10) ? 1 : 0.2,
+                      scaleY: loadingProgress > (i * 10) ? [1, 1.5, 1] : 1
+                    }}
+                    className="w-1 h-4 bg-[#D4AF37]"
+                  />
+                ))}
+             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Bottom Corner Intel */}
+      <div className="absolute bottom-8 left-8 hidden md:block border-l border-white/20 pl-4 py-1">
+        <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">Environment</p>
+        <p className="text-xs font-mono text-white/60 uppercase">Raytraced Garage v2.4</p>
+      </div>
+      
+      <div className="absolute bottom-8 right-8 hidden md:block border-r border-white/20 pr-4 py-1 text-right">
+        <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">Hardware</p>
+        <p className="text-xs font-mono text-white/60 uppercase">WebGL 2.0 Enabled</p>
       </div>
     </motion.div>
   );
