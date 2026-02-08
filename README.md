@@ -1,4 +1,4 @@
-# 🏎️ F1 Experience - 3D Car Configurator
+#  F1 Experience - 3D Car Configurator
 
 A premium, interactive 3D Formula 1 car viewer built with React, TypeScript, and Three.js. Experience engineering perfection with stunning visuals, cinematic camera modes, and detailed technical specifications.
 
@@ -9,14 +9,14 @@ A premium, interactive 3D Formula 1 car viewer built with React, TypeScript, and
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🎮 Interactive 3D Viewer
+###  Interactive 3D Viewer
 - **360° Car Exploration** - Rotate, zoom, and pan around high-fidelity F1 car models
 - **Multiple Camera Modes** - Choose between free camera, orbit, and cinematic views
 - **Auto-Rotate** - Smooth automatic rotation for showcase mode
 
-### 🎨 Customization
+### Customization
 - **Color Picker** - 8 premium paint finishes including:
   - Papaya Orange
   - Racing Red
@@ -28,13 +28,13 @@ A premium, interactive 3D Formula 1 car viewer built with React, TypeScript, and
   - Alpine White
 - **Metallic Materials** - Realistic car paint with clearcoat and metalness
 
-### 🎬 Cinematic Demo Mode
+###  Cinematic Demo Mode
 - **Automatic Camera Animation** - Professional cinematic camera movements
 - **Dark-to-Light Reveal** - Dramatic spotlight transition effect
 - **30-Second Timeout** - Auto-activates after inactivity
 - **Skip Anytime** - Press ESC or click Skip button
 
-### 💡 Interactive Hotspots
+###  Interactive Hotspots
 - **Technical Specifications** - Click on car parts to learn details:
   - Front Wing Assembly
   - Halo Protection System
@@ -44,19 +44,19 @@ A premium, interactive 3D Formula 1 car viewer built with React, TypeScript, and
 - **Animated Markers** - Pulsing cyan indicators
 - **Detailed Modals** - Rich information panels
 
-### 🔦 Special Effects
+###  Special Effects
 - **Triple-Click Spotlight Mode** - Click car 3 times for dramatic yellow spotlight effect
 - **Garage Environment** - Realistic walls, floor, and ambient lighting
 - **Wall Decorations** - F1 posters and racing imagery
 
-### 📱 Fully Responsive
+###  Fully Responsive
 - **Mobile Optimized** - Compact UI for small screens
 - **Reduced Animations** - Simplified effects on mobile for performance
 - **Touch Friendly** - Full touch gesture support
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
@@ -88,7 +88,7 @@ npm run build
 
 ---
 
-## 🎯 Usage
+##  Usage
 
 ### Controls
 | Action | Desktop | Mobile |
@@ -188,5 +188,5 @@ F1, Formula 1, and related marks are trademarks of Formula One Licensing BV.
 ---
 
 <p align="center">
-  <strong>Built with ❤️ for F1 fans</strong>
+  <strong>Built with ❤️ </strong>
 </p>
