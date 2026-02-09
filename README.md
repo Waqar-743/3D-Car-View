@@ -108,7 +108,7 @@ npm run build
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 car-work/
@@ -155,7 +155,7 @@ car-work/
 
 ---
 
-## ⚡ Performance
+##  Performance
 
 - **Optimized Loading** - Progressive asset loading with visual feedback
 - **Reduced Shadows** - Balanced quality vs performance
@@ -164,13 +164,13 @@ car-work/
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 See [TECH_STACK.md](./TECH_STACK.md) for detailed information about all technologies used.
 
 ---
 
-## 📄 License
+##  License
 
 This project is for educational and demonstration purposes.
 
@@ -178,7 +178,7 @@ F1, Formula 1, and related marks are trademarks of Formula One Licensing BV.
 
 ---
 
-## 🙏 Acknowledgments
+##🙏 Acknowledgments
 
 - Three.js community for excellent 3D rendering
 - React Three Fiber for React integration
