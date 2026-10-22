@@ -43,8 +43,8 @@ function fingerprint() {
     supports: game.BRIDGE_SUPPORTS, stripes: game.JUMP_STRIPES });
 }
 
-check('two maps have distinct themes, routes, asset packs and lap targets', () => {
-  assert.equal(game.GAME_MAPS.length, 2);
+check('three maps have distinct themes, routes, asset packs and race targets', () => {
+  assert.equal(game.GAME_MAPS.length, 3);
   const alpine = game.mapById('alpine'), jungle = game.mapById('jungle');
   assert.equal(alpine.laps, 1); assert.equal(jungle.laps, 2);
   assert.equal(alpine.pack, 'cartoon-pack'); assert.equal(jungle.pack, 'jungle-pack');

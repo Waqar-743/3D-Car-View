@@ -31,7 +31,8 @@ export function crossedGate(previous: { x: number; z: number }, current: { x: nu
 }
 
 /** Called only after the next ordered gate has actually been crossed. */
-export function advanceRaceGate(checkpoint: number, lap: number, totalLaps: number) {
+export function advanceRaceGate(checkpoint: number, lap: number, totalLaps: number, closed = true, gateCount = 8) {
+  if (!closed) return { checkpoint: Math.min(gateCount - 1, checkpoint + 1), lap: 1, finished: checkpoint + 1 >= gateCount - 1 };
   if (checkpoint < 7) return { checkpoint: checkpoint + 1, lap, finished: false };
   return lap < totalLaps ? { checkpoint: 0, lap: lap + 1, finished: false }
     : { checkpoint: 7, lap, finished: true };

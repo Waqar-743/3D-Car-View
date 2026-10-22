@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import CarVisual from './CarVisual';
 import World from './World';
 import JungleWorld from './JungleWorld';
+import SnowWorld from './SnowWorld';
 import { currentMap, mapById } from './maps';
 import Vehicle, { ChaseCamera, DrivingEffects } from './Vehicle';
 import { useGame } from './store';
@@ -24,7 +25,7 @@ function Sunlight({ shadows }: { shadows: boolean }) {
     light.current?.position.set(p.x + 35, p.y + 65, p.z + 24);
   });
   return <>
-    <hemisphereLight args={['#fff9e5', currentMap.id === 'jungle' ? '#4e825e' : '#84a57a', 1.8]} />
+    <hemisphereLight args={[currentMap.id === 'snow' ? '#f3f8fb' : '#fff9e5', currentMap.id === 'snow' ? '#829db0' : currentMap.id === 'jungle' ? '#4e825e' : '#84a57a', 1.8]} />
     <directionalLight ref={light} target={target} intensity={2.4} castShadow={shadows}
       shadow-mapSize={[1024, 1024]} shadow-camera-left={-28} shadow-camera-right={28}
       shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={150}
@@ -72,7 +73,7 @@ function SceneLoading() {
   const selectedMap = useGame((state) => state.selectedMap); const map = mapById(selectedMap);
   const progress = useProgress((state) => state.progress);
   if (ready || error) return null;
-  return <div className="scene-loading" role="status"><img src={`${import.meta.env.BASE_URL}${map.pack}/${map.id === 'jungle' ? 'jungle-badge' : 'racing-wheel'}.svg`} alt="" /><span>Getting {map.region} ready</span><progress value={progress} max={100} aria-label={`Loading ${map.name}`} /></div>;
+  return <div className="scene-loading" role="status"><img src={`${import.meta.env.BASE_URL}${map.pack}/${map.id === 'snow' ? 'route-badge' : map.id === 'jungle' ? 'jungle-badge' : 'racing-wheel'}.svg`} alt="" /><span>Getting {map.region} ready</span><progress value={progress} max={100} aria-label={`Loading ${map.name}`} /></div>;
 }
 
 export default function GameScene({ attempt }: { attempt: number }) {
@@ -88,14 +89,14 @@ export default function GameScene({ attempt }: { attempt: number }) {
     <Canvas
       shadows={!low} dpr={low ? 1 : [1, 1.5]}
       frameloop={['paused', 'recovering'].includes(status) || ['map', 'settings', 'howto', 'results'].includes(page) ? 'demand' : 'always'}
-      camera={{ fov: 42, near: 0.1, far: 900, position: [START.point.x + 12, START.point.y + 7, START.point.z + 17] }}
+      camera={{ fov: 42, near: 0.1, far: map.id === 'snow' ? 4500 : 900, position: [START.point.x + 12, START.point.y + 7, START.point.z + 17] }}
       gl={{ antialias: !low, powerPreference: 'high-performance', stencil: false }}
     >
-      <color attach="background" args={[map.theme.sky]} /><fog attach="fog" args={[map.theme.sky, map.id === 'jungle' ? 110 : 230, map.id === 'jungle' ? 410 : 650]} />
+      <color attach="background" args={[map.theme.sky]} /><fog attach="fog" args={[map.theme.sky, map.id === 'snow' ? 300 : map.id === 'jungle' ? 110 : 230, map.id === 'snow' ? 1700 : map.id === 'jungle' ? 410 : 650]} />
       <ContextMonitor /><Sunlight shadows={!low} />
       <Suspense fallback={null}>
         <Physics gravity={[0, -18, 0]} timeStep={1 / 60} paused={status !== 'running'} interpolate>
-          {map.id === 'jungle' ? <JungleWorld low={low} /> : <World low={low} />}
+          {map.id === 'snow' ? <SnowWorld low={low} /> : map.id === 'jungle' ? <JungleWorld low={low} /> : <World low={low} />}
           {racing ? <Vehicle key={runId} /> : <Showcase />}
         </Physics>
         {racing && <><ChaseCamera key={`camera-${runId}`} /><DrivingEffects key={`effects-${runId}`} /></>}

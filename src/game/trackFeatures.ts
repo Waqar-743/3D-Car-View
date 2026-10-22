@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { nearestTrackPoint, TRACK_LENGTH, trackFrame } from './track';
+import { nearestTrackPoint, TRACK_CLOSED, TRACK_LENGTH, trackFrame } from './track';
 
 /** One optional, forward-facing ramp on the opening straight, not beside it. */
 export const BOOST_JUMP = {
@@ -14,7 +14,7 @@ export function jumpDistance(progress: number) {
 export function jumpSample(position: { x: number; z: number }, nearest = nearestTrackPoint(position.x, position.z)) {
   const distance = jumpDistance(nearest.progress);
   const lateral = (position.x - nearest.point.x) * nearest.right.x + (position.z - nearest.point.z) * nearest.right.z;
-  const withinWidth = Math.abs(lateral) <= BOOST_JUMP.width / 2;
+  const withinWidth = TRACK_CLOSED && Math.abs(lateral) <= BOOST_JUMP.width / 2;
   const onRamp = withinWidth && distance >= 0 && distance <= BOOST_JUMP.length;
   return { distance, lateral, withinWidth, onRamp, height: onRamp ? BOOST_JUMP.height * distance / BOOST_JUMP.length + 0.035 : 0 };
 }

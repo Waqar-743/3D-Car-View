@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import type { RapierContext, RapierRigidBody } from '@react-three/rapier';
 import { driveVelocity, type DrivingInput } from './driving';
 import type { GameCar } from './config';
-import { nearestTrackPoint, ROAD_WIDTH, TRACK_LENGTH, trackFrame } from './track';
+import { CHECKPOINT_PROGRESS, nearestTrackPoint, ROAD_WIDTH, TRACK_CLOSED, TRACK_LENGTH, trackFrame } from './track';
+import { surfaceAt } from './snowCourse';
 import { getDriveableHalfWidth } from './trackBarriers';
 import { BOOST_JUMP, jumpSample } from './trackFeatures';
 
@@ -15,18 +16,18 @@ export type RecoveryReason = 'off-road' | 'fall' | 'water' | 'manual';
 type Point = { x: number; y: number; z: number };
 
 export function getRespawnPose(checkpoint: number, initial = false) {
-  const earned = Math.max(0, Math.min(7, Math.floor(checkpoint)));
+  const earned = Math.max(0, Math.min(CHECKPOINT_PROGRESS.length - 1, Math.floor(checkpoint)));
   // Start seven metres behind the line; recover four metres after an earned
   // gate so the player cannot accidentally earn that gate twice.
-  const progress = initial || earned === 0 ? -7 / TRACK_LENGTH : earned / 8 + 4 / TRACK_LENGTH;
+  const progress = initial || earned === 0 ? (TRACK_CLOSED ? -7 : 8) / TRACK_LENGTH : CHECKPOINT_PROGRESS[earned] + 4 / TRACK_LENGTH;
   const frame = trackFrame(progress);
-  return { ...frame, progress: ((progress % 1) + 1) % 1, position: { x: frame.point.x, y: frame.point.y + RIDE_HEIGHT, z: frame.point.z } };
+  return { ...frame, progress: TRACK_CLOSED ? ((progress % 1) + 1) % 1 : Math.min(1, progress), position: { x: frame.point.x, y: frame.point.y + RIDE_HEIGHT, z: frame.point.z } };
 }
 
 export function recoveryReason(p: Point, nearest: ReturnType<typeof nearestTrackPoint>, offRoadSeconds: number): RecoveryReason | null {
   if (![p.x, p.y, p.z].every(Number.isFinite) || p.y < -2) return 'fall';
   const outside = nearest.distance > getDriveableHalfWidth(nearest.progress);
-  if (outside && Math.abs(p.z) < 23 && p.y < 0.4) return 'water';
+  if (TRACK_CLOSED && outside && Math.abs(p.z) < 23 && p.y < 0.4) return 'water';
   if (outside && p.y < nearest.point.y - 0.45) return 'fall';
   if (nearest.distance > 18 || (outside && offRoadSeconds >= 0.4)) return 'off-road';
   return null;
@@ -64,6 +65,7 @@ export function stepVehicleMotion(body: RapierRigidBody, _world: RapierContext['
   const position = body.translation(), velocity = body.linvel();
   const yaw = readHeading(body, tools), sin = Math.sin(yaw), cos = Math.cos(yaw);
   const nearest = nearestTrackPoint(position.x, position.z);
+  const surface = surfaceAt(nearest.progress);
   const onRoad = nearest.distance <= getDriveableHalfWidth(nearest.progress);
   const ramp = jumpSample(position, nearest), jump = tools.jump;
   jump.boostRemaining = Math.max(0, jump.boostRemaining - dt);
@@ -101,8 +103,9 @@ export function stepVehicleMotion(body: RapierRigidBody, _world: RapierContext['
   }
   const boosting = jump.boostRemaining > 0;
   const boostedForward = boostStarted ? Math.min(car.topSpeed * 1.28, Math.max(BOOST_JUMP.minimumBoostSpeed, forward + BOOST_JUMP.speedGain)) : forward;
-  const speedLimit = boosting ? car.topSpeed * 1.28 : Math.max(car.topSpeed, forward - dt * 8);
-  const driving = driveVelocity(boostedForward, lateral, input, { ...car, topSpeed: speedLimit }, onRoad, grounded, dt);
+  const speedLimit = boosting ? car.topSpeed * 1.28 : Math.max(car.topSpeed * surface.speed, forward - dt * 8);
+  const driving = driveVelocity(boostedForward, lateral, input, { ...car, topSpeed: speedLimit,
+    grip: car.grip * surface.grip, braking: car.braking * surface.braking, acceleration: car.acceleration * surface.acceleration, steering: car.steering * surface.steering }, onRoad, grounded, dt);
   const vx = sin * driving.forward + cos * driving.lateral;
   const vz = cos * driving.forward - sin * driving.lateral;
   let vy = launched ? BOOST_JUMP.launchVelocity : velocity.y;
@@ -118,7 +121,7 @@ export function stepVehicleMotion(body: RapierRigidBody, _world: RapierContext['
   jump.previousDistance = ramp.distance;
   if (!jump.airborne && (ramp.distance < -4 || ramp.distance > BOOST_JUMP.length + 12)) jump.primed = false;
   return {
-    position, velocity, yaw, nearest, onRoad, grounded, driving, boosting, boostStarted, launched,
+    position, velocity, yaw, nearest, onRoad, grounded, driving, boosting, boostStarted, launched, surface: surface.kind,
     drifting: grounded && Math.abs(forward) > 8 && (input.handbrake || Math.abs(lateral) > 2.8),
   };
 }

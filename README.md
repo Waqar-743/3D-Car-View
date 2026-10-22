@@ -31,20 +31,23 @@ I'm [Waqar Ahmed](https://github.com/Waqar-743), and Windway is my ongoing exper
 | --- | --- | --- |
 | **The alpine loop** | Open mountain views, timber bridges, goats and eagles. Warm paper, sage and orange. | One lap, eight ordered gates, one orange boost jump. |
 | **Canopy Run** | Dense broadleaf trees, palms, vines, jade water and tiny clearings. Jade, marigold and coral. | Two laps, every gate on both loops, and a short flight from the on-road ramp. |
+| **Frostbite Ascent** | Snow-covered firs, distant peaks, a snowman co-driver and a finish above the clouds. Ice blue and rescue coral. | Expert: a 6.44 km one-way climb, about 362 m of elevation gain, eight ice zones, fifteen solid slalom hurdles and sixteen ordered gates ending at the summit. |
 
-Both roads have a live minimap, protected bridge edges, checkpoint recovery and a finish worth earning. The jungle adds a roadside ranger station and a cast of lions, giraffes, deer, pythons, horses, wolves, monkeys, toucans and elephants.
+Every road has a live minimap, checkpoint recovery and a finish worth earning. The two circuits have protected bridge edges. The jungle adds a roadside ranger station and a cast of lions, giraffes, deer, pythons, horses, wolves, monkeys, toucans and elephants. The mountain is a different kind of story: no laps, no boost ramp, less traction, narrower bends and one long push to the top.
 
 **WAQAR, IMRAN and TATHEER** are the original cartoon road crew. Their names are part of the game; their portraits are fictional designs, not assumed likenesses of real people.
 
 ## Two cars. Different attitudes.
 
-The **McLaren MCL38** is the quicker launch and the livelier turn-in. The **Mercedes-AMG W14** trades some initial punch for a higher top speed and more grip. Pick your car, choose one of six paint colours, and take either route.
+The **McLaren MCL38** is the quicker launch and the livelier turn-in. The **Mercedes-AMG W14** trades some initial punch for a higher top speed and more grip. Pick your car, choose one of six paint colours, and take any of the three roads.
 
 There are no opponents or multiplayer yet. This is a single-player time trial: your line, your mistakes, your next personal best. Records are saved separately for each map and car, on your own device.
 
 ## A little chaos. A dependable way back.
 
-A marked ramp gives you a brief speed surge and intentional airtime. Ordinary driving stays planted. Bridge walls are physical barriers, not just scenery. If you leave an unprotected edge or end up in the river, the game returns you to your last earned checkpoint without erasing your current lap.
+A marked ramp on the two circuits gives you a brief speed surge and intentional airtime. Ordinary driving stays planted. Bridge walls, mountain rails and snow-block hurdles are physical barriers, not just scenery. If you leave an unprotected edge or end up in the river, the game returns you to your last earned checkpoint without erasing your progress.
+
+On Frostbite Ascent, brake **before** the blue ice. Packed snow is already slippery; ice reduces grip and braking further. Thread the alternating obstacles, keep the steering gentle, and watch the altitude rise. The last gate is on the summit, not back at base camp.
 
 Chase and hood cameras, rotating wheels, drifting, dust, skid marks, and synthesized engine sounds give the road some life. Sound starts after your first interaction. Graphics quality, effects, volume and calmer motion are adjustable.
 
@@ -59,7 +62,7 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:4175/3D-Car-Design/**. Add **?map=jungle** to open Canopy Run directly. The local folder/base path is intentionally kept compatible with earlier previews; the published build uses the GitHub repository's actual path.
+Open **http://127.0.0.1:4175/3D-Car-Design/**. Add **?map=jungle** for Canopy Run or **?map=snow** for Frostbite Ascent. The local folder/base path is intentionally kept compatible with earlier previews; the published build uses the GitHub repository's actual path.
 
 | What you want to do | Key |
 | --- | --- |
@@ -75,7 +78,7 @@ Touch steering and pedals are available on smaller screens and touch devices.
 
 ## The cast lives in SVG
 
-The alpine collection has **36 editable SVGs**. The jungle adds **25**, including wildlife, the named crew, vegetation, river artwork, the station, lap badge, finish flag, minimap and winner's trophy.
+The alpine collection has **36 editable SVGs**. The jungle adds **25**, including wildlife, the named crew, vegetation, river artwork, the station, lap badge, finish flag, minimap and winner's trophy. Winter brings **18** more: a snowman, snowy fir and mountain, ice and warning signs, snowbank, boulder, slalom gate, hut, summit flag and trophy, minimap, checkpoint, route badge, wind, snowflake, arctic fox and penguin.
 
 [Browse the alpine collection](https://waqar-743.github.io/3D-Car-View/cartoon-pack/) or [open the jungle gallery](https://waqar-743.github.io/3D-Car-View/jungle-pack/). Each gallery offers larger previews and the actual vector files.
 
@@ -83,6 +86,15 @@ The alpine collection has **36 editable SVGs**. The jungle adds **25**, includin
 <summary>See the jungle cast and race-day kit</summary>
 
 ![Windway jungle SVG collection](public/jungle-pack/contact-sheet.png)
+
+</details>
+
+<details>
+<summary>See the Frostbite Ascent winter collection</summary>
+
+![Windway winter SVG collection](public/snow-pack/contact-sheet.png)
+
+The local preview gallery is at `/3D-Car-Design/snow-pack/`. Every icon is an editable, self-contained SVG with a title and description; larger previews and downloads are built into the gallery.
 
 </details>
 
@@ -98,7 +110,7 @@ npm run build
 npm run preview -- --host 127.0.0.1 --port 4175 --strictPort
 ```
 
-The automated suite covers **120 checks**: driving and race state, both maps' bridge collisions, two-lap progression, saved records, SVG references, and headless rendering of the interface. Both cars complete simulated two-lap jungle runs. These tests do not replace browser, touch-device or frame-rate testing.
+The automated suite covers driving and race state, both circuits' bridge collisions, mountain rails and obstacles, ice handling, ordered summit progression, saved records, SVG references, headless screens, and responsive HUD rules. Both cars complete simulated two-lap jungle runs and full summit climbs. These tests do not replace browser, touch-device or frame-rate testing.
 
 GitHub Actions builds and publishes the main branch to GitHub Pages. The deployed base path follows the repository name, so the public site does not accidentally request files from an old project URL.
 

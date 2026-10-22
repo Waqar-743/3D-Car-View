@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
-export const ROAD_WIDTH = 14;
-export const TRACK_SEGMENTS = 360;
+export let ROAD_WIDTH = 14;
+export let TRACK_SEGMENTS = 360;
+export let TRACK_CLOSED = true;
 export const ALPINE_POINTS = [
   new THREE.Vector3(0, 1.1, 119),
   new THREE.Vector3(82, 2.4, 119),
@@ -17,7 +18,7 @@ export const ALPINE_POINTS = [
 export let trackCurve = new THREE.CatmullRomCurve3(ALPINE_POINTS, true, 'catmullrom', 0.35);
 
 export function trackFrame(progress: number) {
-  const t = ((progress % 1) + 1) % 1;
+  const t = TRACK_CLOSED ? ((progress % 1) + 1) % 1 : THREE.MathUtils.clamp(progress, 0, 1);
   const point = trackCurve.getPointAt(t);
   const tangent = trackCurve.getTangentAt(t).normalize();
   const right = new THREE.Vector3(tangent.z, 0, -tangent.x).normalize();
@@ -26,6 +27,7 @@ export function trackFrame(progress: number) {
 
 export let TRACK_POINTS = Array.from({ length: TRACK_SEGMENTS }, (_, index) => trackFrame(index / TRACK_SEGMENTS));
 export let CHECKPOINTS = Array.from({ length: 8 }, (_, index) => trackFrame(index / 8));
+export let CHECKPOINT_PROGRESS = Array.from({ length: 8 }, (_, index) => index / 8);
 export let TRACK_LENGTH = trackCurve.getLength();
 
 export function nearestTrackPoint(x: number, z: number) {
@@ -39,30 +41,32 @@ export function nearestTrackPoint(x: number, z: number) {
   // Project onto the two neighbouring segments. Returning the closest vertex
   // made the height jump in 2–3 metre steps while a car crossed a slope.
   let segment = index, blend = 0;
-  for (const candidate of [(index + TRACK_SEGMENTS - 1) % TRACK_SEGMENTS, index]) {
-    const a = TRACK_POINTS[candidate].point, b = TRACK_POINTS[(candidate + 1) % TRACK_SEGMENTS].point;
+  for (const candidate of (TRACK_CLOSED ? [(index + TRACK_SEGMENTS - 1) % TRACK_SEGMENTS, index] : [Math.max(0, index - 1), Math.min(TRACK_SEGMENTS - 1, index)])) {
+    const a = TRACK_POINTS[candidate].point, b = TRACK_POINTS[(candidate + 1) % TRACK_POINTS.length].point;
     const dx = b.x - a.x, dz = b.z - a.z;
     const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)));
     const distance = (x - a.x - dx * t) ** 2 + (z - a.z - dz * t) ** 2;
     if (distance <= distanceSquared) { distanceSquared = distance; segment = candidate; blend = t; }
   }
-  const a = TRACK_POINTS[segment], b = TRACK_POINTS[(segment + 1) % TRACK_SEGMENTS];
+  const a = TRACK_POINTS[segment], b = TRACK_POINTS[(segment + 1) % TRACK_POINTS.length];
   const point = a.point.clone().lerp(b.point, blend);
   const tangent = a.tangent.clone().lerp(b.tangent, blend).normalize();
   const right = new THREE.Vector3(tangent.z, 0, -tangent.x).normalize();
-  return { point, tangent, right, yaw: Math.atan2(tangent.x, tangent.z), index: segment, progress: ((segment + blend) / TRACK_SEGMENTS) % 1, distance: Math.sqrt(distanceSquared) };
+  const progress = (segment + blend) / TRACK_SEGMENTS;
+  return { point, tangent, right, yaw: Math.atan2(tangent.x, tangent.z), index: segment, progress: TRACK_CLOSED ? progress % 1 : progress, distance: Math.sqrt(distanceSquared) };
 }
 
-export function ribbonGeometry(width: number, offset = 0, lift = 0) {
+export function ribbonGeometry(width: number, offset = 0, lift = 0, from = 0, to = 1) {
   const positions: number[] = [];
   const indices: number[] = [];
-  for (let i = 0; i <= TRACK_SEGMENTS; i++) {
-    const { point, right } = trackFrame(i / TRACK_SEGMENTS);
+  const segments = Math.max(2, Math.round(TRACK_SEGMENTS * (to - from)));
+  for (let i = 0; i <= segments; i++) {
+    const { point, right } = trackFrame(from + (to - from) * i / segments);
     for (const side of [-1, 1]) {
       const edge = point.clone().addScaledVector(right, offset + side * width / 2);
       positions.push(edge.x, edge.y + lift, edge.z);
     }
-    if (i < TRACK_SEGMENTS) {
+    if (i < segments) {
       const v = i * 2;
       indices.push(v, v + 2, v + 1, v + 1, v + 2, v + 3);
     }
@@ -83,14 +87,29 @@ export function seededRandom(seed: number) {
 }
 
 export let START = trackFrame(0);
+let mapProjection = { scale: 0.57, x: 100, z: 100 };
+export function trackMapPoint(x: number, z: number) { return { x: x * mapProjection.scale + mapProjection.x, y: z * mapProjection.scale + mapProjection.z }; }
 
 /** Switch all derived geometry together, before the selected scene remounts. */
-export function setTrackLayout(points: THREE.Vector3[]) {
-  trackCurve = new THREE.CatmullRomCurve3(points, true, 'catmullrom', 0.35);
-  TRACK_POINTS = Array.from({ length: TRACK_SEGMENTS }, (_, index) => trackFrame(index / TRACK_SEGMENTS));
-  CHECKPOINTS = Array.from({ length: 8 }, (_, index) => trackFrame(index / 8));
+export function setTrackLayout(points: THREE.Vector3[], options: { closed?: boolean; width?: number; segments?: number; gates?: number } = {}) {
+  TRACK_CLOSED = options.closed ?? true; ROAD_WIDTH = options.width ?? 14; TRACK_SEGMENTS = options.segments ?? 360;
+  // Broader mountain hairpins keep the narrow snowy road physically drivable;
+  // difficulty comes from traction and obstacles, not a near-kink in the mesh.
+  trackCurve = new THREE.CatmullRomCurve3(points, TRACK_CLOSED, 'catmullrom', TRACK_CLOSED ? 0.35 : 0.55);
+  trackCurve.arcLengthDivisions = TRACK_CLOSED ? 200 : 4000;
+  TRACK_POINTS = Array.from({ length: TRACK_SEGMENTS + (TRACK_CLOSED ? 0 : 1) }, (_, index) => trackFrame(index / TRACK_SEGMENTS));
+  const gates = options.gates ?? 8;
+  CHECKPOINT_PROGRESS = Array.from({ length: gates }, (_, index) => TRACK_CLOSED ? index / gates : index / (gates - 1) * 0.99);
+  CHECKPOINTS = CHECKPOINT_PROGRESS.map(trackFrame);
   TRACK_LENGTH = trackCurve.getLength();
   START = trackFrame(0);
+  if (TRACK_CLOSED) mapProjection = { scale: 0.57, x: 100, z: 100 };
+  else {
+    const xs = TRACK_POINTS.map(({ point }) => point.x), zs = TRACK_POINTS.map(({ point }) => point.z);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+    const scale = 172 / Math.max(maxX - minX, maxZ - minZ);
+    mapProjection = { scale, x: 100 - (minX + maxX) / 2 * scale, z: 100 - (minZ + maxZ) / 2 * scale };
+  }
   MAP_PATH = TRACK_POINTS.filter((_, index) => index % 3 === 0)
-    .map(({ point }, index) => `${index ? 'L' : 'M'}${(point.x * 0.57 + 100).toFixed(1)},${(point.z * 0.57 + 100).toFixed(1)}`).join(' ') + 'Z';
+    .map(({ point }, index) => { const p = trackMapPoint(point.x, point.z); return `${index ? 'L' : 'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ') + (TRACK_CLOSED ? 'Z' : '');
 }

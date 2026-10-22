@@ -7,17 +7,19 @@ npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:4175/3D-Car-Design/. To preview the new map directly, use http://127.0.0.1:4175/3D-Car-Design/?map=jungle. Port 4174 was the separate original SVG gallery, not the game. The dev server binds only to this computer and does not open or replace unrelated services.
+Open http://127.0.0.1:4175/3D-Car-Design/. Direct map links use `?map=jungle` for Canopy Run and `?map=snow` for Frostbite Ascent. Port 4174 was the separate original SVG gallery, not the game. The dev server binds only to this computer and does not open or replace unrelated services.
 
 The public game is at https://waqar-743.github.io/3D-Car-View/. GitHub already uses `3D-Car-View` as this repository's canonical name. CI passes that repository name as Vite's base path; local previews retain `/3D-Car-Design/`. The public brand is Windway. Lowercase `wildway` preference keys and some internal filenames are deliberately retained for compatibility with existing saves and links.
 
 ## What is playable
 
 - Two selectable circuits: the original one-lap alpine loop and the new two-lap **Canopy Run** in Jungle Reserve. Each map generates its road, bridge protection, ramp, checkpoint gates, safe respawns, and live minimap from one centerline.
+- A third, expert map: **Frostbite Ascent** in Whiteout Ridge. This is a 6.44 km one-way route climbing about 362 m, not a closed circuit. Fifteen intermediate checkpoints lead to the sixteenth gate and checkered finish at the summit. Snow-covered terrain, instanced firs and peaks, camera-following snowfall, a base-camp hut, snowman and arctic fox give it a separate winter identity.
+- Packed snow reduces grip, acceleration, braking and the speed ceiling. Eight clearly marked blue-ice sections reduce traction and braking further. Fifteen solid, alternating snow blocks require steering into the open passing lane. Physical coral/powder rails protect bends; selected straight edges remain open and use checkpoint recovery. There is no boost or jump ramp on the ascent.
 - Canopy Run has dense instanced broadleaf trees, palms, vines, ferns, tiny clearings, jade water, a roadside ranger stop station, and a marigold/coral racing palette. Wildlife and original cartoon crew WAQAR, IMRAN, and TATHEER appear beside the course, outside the driving corridor.
 - McLaren MCL38 and Mercedes-AMG W14, with different acceleration, top speed, steering, braking, and grip. Six paint choices apply to the selected car.
 - A three-second start countdown, seven ordered intermediate gates, then the finish gate **on every lap**. Canopy Run resets the checkpoint sequence for lap two and awards the finish only after both complete loops. Reverse crossings and driving outside a gate do not earn a checkpoint.
-- Gravity, stable road-plane following, a non-bouncy body collider, raised road surfaces, barrier collisions, two river bridges per map, and a boost ramp built into the road (orange in alpine, marigold in jungle).
+- Gravity, stable road-plane following, a non-bouncy body collider, raised road surfaces and barrier collisions. The two circuits each have two river bridges and a boost ramp built into the road (orange in alpine, marigold in jungle).
 - Acceleration, braking, reverse, reduced off-road grip, handbrake drifting, rotating/steering wheels, chase and hood cameras, dust, skid marks, landing/collision reactions, and speed effects.
 - Start, garage, valley map, settings, controls, pause, and results screens, with the custom cartoon SVG collection and low-poly scenery.
 - Synthesized engine, tires, ambience, musical loop, and event sounds. Audio starts only after a user gesture.
@@ -37,11 +39,17 @@ The public game is at https://waqar-743.github.io/3D-Car-View/. GitHub already u
 
 Leaving the circuit for more than 0.4 seconds, falling below an edge, or entering the river automatically starts a 1.2-second recovery. The car returns to the last earned checkpoint (or behind the start line before checkpoint one), with speed and held controls cleared. The camera snaps safely to the recovered car instead of flying across the map.
 
+On Frostbite Ascent the start is eight metres along the road, not behind its open endpoint. Earned-gate recoveries are four metres after the gate, uphill, with no wrap back to base camp. The HUD shows all sixteen required crossings, surface warnings, altitude and route progress. Brake before ice, use small steering inputs and avoid the handbrake on slippery sections. The clock keeps running during recovery; map/car records stay separate from the two circuit records.
+
 The orange ramp sits on the circuit, not beside the garage. Drive over it in the forward direction to trigger a brief speed surge and short flight, then hold your line to land back on the road. The race HUD displays BOOST and AIRTIME while each effect is active. Those indicators remain readable with effects off or calmer motion enabled.
+
+All driving information now lives in a compact **right-edge dashboard**: timer, lap/ascent state, gates, surface warning, speed, minimap and camera/recovery controls. Countdown, GO, boost and recovery messages stay inside that same edge stack; there is no center-screen speed-lines overlay or recovery scrim. Touch steering and pedals occupy the two bottom corners. The dashboard reserves their space, honors safe-area insets and stays at least twelve pixels to the right of the viewport centerline. Short screens simplify optional map/character details while retaining critical driving information; unusually small viewports can scroll within the panel. Pause and results remain intentional separate screens.
 
 Choose **Canopy Run** using the map selector on the start screen or under **The maps**. Its ramp uses marigold and jade instead of orange. The lap counter and race clock cover both laps, and a recovery preserves the current lap and earned checkpoint. Map changes are locked while a race is active. The roadside station is a physical scenery building with a lay-by; it does not promise repairs, fuel, or a shortcut through the course.
 
 The new editable SVG gallery is at `/3D-Car-Design/jungle-pack/index.html`, with animals (lion, giraffe, deer, python, horse, wolf, monkey, toucan, elephant), original named portraits, vegetation, river, station, and recoloured race-kit icons. No real person's likeness is inferred from a name.
+
+The winter gallery is at `/3D-Car-Design/snow-pack/index.html`: eighteen native, accessible SVGs with full-size previews, downloads, a manifest and a contact sheet. Its ice-blue/rescue-coral palette is also used in the start, map, garage, controls, settings, race and results views.
 
 The ramp is on the opening straight, 12 metres long and 8 metres wide, leaving a bypass lane on each side. Forward entry adds 9 m/s (about 32 km/h) with a minimum boosted speed of 30 m/s, permits a temporary higher speed limit for 1.5 seconds, then tapers back to the car's ordinary limit. Launch is limited to forward crossings of the ramp lip; reversing, bypassing, waiting on the ramp, pausing, and recovery cannot repeatedly farm launches. Landing returns to normal ground-following without a springy rebound.
 
@@ -57,6 +65,7 @@ Recovery keeps the clock running and never grants a later checkpoint. Switching 
 - Trees, mountain peaks, rocks, road markings, dust, and skid marks use instancing. Simulation is fixed at 60 Hz; UI telemetry is published at 10 Hz, not every frame.
 - Automatic/light graphics reduce vegetation, pixel density, antialiasing, and shadows. The settings, map, controls, pause, and results views render on demand.
 - The jungle forest uses six instanced batches rather than an individual draw call for every tree or plant. Low quality reduces the tree target from 1,470 to 820, canopy detail/shadows, and river marks. Only the selected map's SVG textures are requested by its scene; changing maps remounts and disposes the previous scene.
+- Winter fir trunks, layered branches, snow caps and distant mountains are instanced. Light mode halves the candidate tree count, reduces the terrain mesh and uses 300 snow particles instead of 700. Snowfall and powder effects respect effects-off; calmer motion keeps the snow cloud static. The 1,200-segment ascent uses the same road geometry for rendering and collision, with visible rail and hurdle dimensions shared with physics tests.
 - Camera shake, speed effects, and particles can be turned off; calmer motion is a separate preference. CSS animations honor the operating system's reduced-motion preference.
 - Selection controls expose their state, settings have labels, keyboard focus is visible, page headings receive focus, and the pause dialog traps keyboard focus.
 - Loading and graphics/model failures have visible feedback and a retry action. Storage failures do not prevent play.
@@ -75,16 +84,23 @@ The previous round-contact setup could launch a car 5–6.5 metres above a norma
 
 `npm run test:maps` checks live map switching, geometry rebuilding, legacy record migration/separation, persisted selection, lap progression and real two-lap jungle driving for both cars. It is also included in `npm run test:game`.
 
-The complete suite now has 120 checks: 24 driving/state checks, 11 barrier checks on each map (452 total full-speed impacts), 14 map/lap/asset checks, and 60 headless interface checks. Both cars complete two jungle laps with all 16 ordered gates, exactly two boosts/launches and no recovery, then safely settle at all eight respawn points. `npm run test:ui` renders all seven screens for both maps with an explicitly stubbed 3D viewport; it checks themes, labels, selection state, image files and race feedback, not GPU output or pixel layout.
+Both cars complete two jungle laps with all 16 ordered gates, exactly two boosts/launches and no recovery, then safely settle at all eight respawn points. `npm run test:ui` renders all seven screens for all three maps with an explicitly stubbed 3D viewport; it checks themes, labels, selection state, image files and race feedback, not GPU output or pixel layout.
+
+`npm run test:snow` verifies open endpoints, a true summit finish, minimap bounds, all ordered gates, independent snow records, all eighteen winter SVGs, live-physics grip/braking differences, every checkpoint respawn, real hurdle impacts and passing lanes, full-speed rail containment and off-road recovery. It drives both cars up the entire mountain with the actual road, barriers, hurdles and player controller, without teleporting or enabling artificial jumps. These conservative automated runs are not speed records.
+
+The suite includes 24 driving/state checks, 11 barrier checks on each circuit, 14 map/lap checks, 14 snow checks, 119 headless UI checks and 47 HUD CSS contract checks. `npm run test:hud` evaluates the shipped corner-position, touch-target, contrast and safe-area formulas across fourteen portrait/landscape viewport sizes for all three maps. This is a CSS contract test, not a browser rendering engine. The mountain ascent tests take roughly eight minutes of simulated game time per car; they are conservative driving examples, not a minimum or guaranteed human completion time.
 
 Browser visual and touch-device checks remain separate from these automated tests. Do not treat passing controller tests as proof of a measured frame rate or a tested mobile layout.
 
 ## Source map
 
 - `src/game/Wildway.tsx`: interface screens and flows.
+- `src/game/race-hud.css`: isolated right-edge gameplay HUD, safe areas and compact touch/landscape layouts.
 - `src/game/GameScene.tsx`: rendering, loading, camera presentation, and physics integration.
 - `src/game/World.tsx`: road, valley, wildlife, bridges, barriers, and jump.
 - `src/game/JungleWorld.tsx`: dense tropical vegetation, wildlife/crew SVGs, river, and roadside station.
+- `src/game/SnowWorld.tsx`: snow terrain, instanced winter vegetation, peaks, physical hurdles, ice visuals and snowfall.
+- `src/game/snowCourse.ts`: marked ice zones, surface handling multipliers, obstacle data and development/test slalom targets.
 - `src/game/maps.ts`: map catalog, colour themes, route selection, and map-specific record keys.
 - `src/game/Vehicle.tsx`: rigid-body driving, recovery, race progression, chase camera, and effects.
 - `src/game/driving.ts`: deterministic traction/steering and gate-crossing functions.
@@ -96,6 +112,8 @@ Browser visual and touch-device checks remain separate from these automated test
 - `scripts/test-game.mjs`: repeatable logic and physics tests.
 - `scripts/test-barriers.mjs`: bridge-wall collision, support-joint, and boosted-impact regression tests.
 - `scripts/test-maps.mjs`: map/lap/record regressions and full two-lap jungle drives.
+- `scripts/test-snow.mjs`: open-ascent, winter asset, ice, hurdle, recovery and full-climb physics checks.
 - `scripts/test-ui.mjs`: isolated headless screen/state/art-reference checks.
+- `scripts/test-hud-layout.mjs`: viewport/safe-area formulas, center clearance, contrast and minimum touch-target contracts.
 
 The previous showroom source remains available but is no longer mounted by `src/App.tsx`. Original model authors' licenses and attribution requirements still apply before distributing the game.

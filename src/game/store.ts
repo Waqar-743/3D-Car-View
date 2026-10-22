@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { GAME_CARS, PAINTS, carById } from './config';
 import type { RecoveryReason } from './vehiclePhysics';
 import { GAME_MAPS, activateMap, gameRecordKey, mapById } from './maps';
+import { START } from './track';
 
 export type Page = 'home' | 'garage' | 'map' | 'settings' | 'howto' | 'race' | 'results';
 export type RaceStatus = 'idle' | 'loading' | 'countdown' | 'running' | 'recovering' | 'paused' | 'finished';
@@ -38,8 +39,10 @@ function persistPreferences(state: Preferences) {
 export interface Telemetry {
   speed: number; elapsed: number; lap: number; checkpoint: number; progress: number; x: number; z: number;
   drifting: boolean; airborne: boolean; boosting: boolean; resets: number;
+  altitude?: number; surface?: 'dry' | 'packed-snow' | 'black-ice';
 }
 const emptyTelemetry: Telemetry = { speed: 0, elapsed: 0, lap: 1, checkpoint: 0, progress: 0, x: 0, z: 119, drifting: false, airborne: false, boosting: false, resets: 0 };
+const emptyRun = (): Telemetry => ({ ...emptyTelemetry, x: START.point.x, z: START.point.z, altitude: START.point.y, surface: mapById(preferences.selectedMap).mode === 'ascent' ? 'packed-snow' : 'dry' });
 
 interface GameState extends Preferences {
   page: Page; returnPage: Page; status: RaceStatus; countdown: number; ready: boolean;
@@ -70,7 +73,7 @@ activateMap(preferences.selectedMap);
 export const useGame = create<GameState>((set, get) => ({
   ...preferences, page: 'home', returnPage: 'home', status: 'idle', countdown: 3,
   ready: false, runId: 0, resetRequest: 0, cameraMode: 'chase', error: null,
-  telemetry: { ...emptyTelemetry }, result: null, reaction: null, recovery: null,
+  telemetry: emptyRun(), result: null, reaction: null, recovery: null,
   navigate: (page) => {
     const state = get();
     if (page === 'settings' || page === 'howto') {
@@ -85,12 +88,12 @@ export const useGame = create<GameState>((set, get) => ({
     if (map.id === state.selectedMap || ['loading', 'countdown', 'running', 'recovering', 'paused'].includes(state.status)) return;
     activateMap(map.id);
     set({ selectedMap: map.id, ready: false, status: 'idle', page: state.page === 'results' ? 'map' : state.page,
-      runId: state.runId + 1, telemetry: { ...emptyTelemetry }, result: null, reaction: null, recovery: null, error: null });
+      runId: state.runId + 1, telemetry: { ...emptyRun(), surface: map.mode === 'ascent' ? 'packed-snow' : 'dry' }, result: null, reaction: null, recovery: null, error: null });
     persistPreferences(get());
   },
   setPaint: (paint) => { set({ paint }); persistPreferences(get()); },
   updateSettings: (settings) => { set({ settings: { ...get().settings, ...settings } }); persistPreferences(get()); },
-  startRace: () => set((state) => ({ page: 'race', status: 'loading', countdown: 3, runId: state.runId + 1, resetRequest: 0, telemetry: { ...emptyTelemetry }, result: null, reaction: null, recovery: null, cameraMode: 'chase', error: null })),
+  startRace: () => set((state) => ({ page: 'race', status: 'loading', countdown: 3, runId: state.runId + 1, resetRequest: 0, telemetry: { ...emptyRun(), surface: mapById(state.selectedMap).mode === 'ascent' ? 'packed-snow' : 'dry' }, result: null, reaction: null, recovery: null, cameraMode: 'chase', error: null })),
   setReady: (ready) => set({ ready }),
   setError: (error) => set({ error }),
   startCountdown: () => { if (get().status === 'loading') set({ status: 'countdown', countdown: 3 }); },

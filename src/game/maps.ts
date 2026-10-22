@@ -2,10 +2,12 @@ import * as THREE from 'three';
 import { ALPINE_POINTS, setTrackLayout } from './track';
 import { rebuildTrackBarriers } from './trackBarriers';
 import { rebuildTrackFeatures } from './trackFeatures';
+import { rebuildSnowCourse } from './snowCourse';
 
 export interface GameMap {
-  id: 'alpine' | 'jungle'; name: string; region: string; description: string;
-  laps: number; pack: 'cartoon-pack' | 'jungle-pack'; character: string;
+  id: 'alpine' | 'jungle' | 'snow'; name: string; region: string; description: string;
+  laps: number; pack: 'cartoon-pack' | 'jungle-pack' | 'snow-pack'; character: string;
+  mode?: 'ascent';
   theme: { ink: string; paper: string; accent: string; leaf: string; sky: string; road: string; water: string };
   points: THREE.Vector3[];
 }
@@ -24,6 +26,17 @@ export const GAME_MAPS: GameMap[] = [
       [155, 4.2, -90], [75, 2.3, -146], [-14, 1.5, -113], [-105, 2.8, -147],
       [-156, 4.2, -60], [-114, 3.3, 21], [-147, 2, 93], [-55, 1.3, 137]]
       .map(([x, y, z]) => new THREE.Vector3(x, y, z)) },
+  { id: 'snow', name: 'Frostbite Ascent', region: 'Whiteout Ridge',
+    description: 'Windway’s expert route: a long one-way mountain climb, slippery ice, narrow switchbacks and physical snow-block slaloms. Earn every gate, then finish on the summit.',
+    laps: 1, pack: 'snow-pack', character: 'snowman', mode: 'ascent',
+    theme: { ink: '#263d52', paper: '#f3f8fb', accent: '#d47762', leaf: '#7aa7bf', sky: '#d9e8ef', road: '#688795', water: '#b9e1ed' },
+    points: [[-280, 4, 650], [-80, 12, 620], [140, 22, 630], [310, 32, 540],
+      [120, 44, 470], [-180, 56, 490], [-330, 66, 400], [-140, 77, 320], [180, 91, 330],
+      [330, 104, 240], [100, 118, 160], [-200, 132, 180], [-320, 144, 80], [-70, 156, -10],
+      [220, 171, 10], [340, 184, -90], [100, 198, -180], [-200, 212, -160], [-300, 226, -270],
+      [-80, 240, -350], [180, 255, -330], [300, 268, -430], [80, 282, -520], [-160, 296, -500],
+      [-240, 309, -610], [-40, 322, -690], [160, 337, -660], [220, 350, -760], [0, 365, -840], [-70, 365, -900]]
+      .map(([x, y, z]) => new THREE.Vector3(x, y, z)) },
 ];
 
 export const mapById = (id: string): GameMap => GAME_MAPS.find((map) => map.id === id) ?? GAME_MAPS[0];
@@ -32,8 +45,9 @@ export const gameRecordKey = (mapId: string, carId: string) => mapId === 'alpine
 export let currentMap: GameMap = GAME_MAPS[0];
 export function activateMap(id: string) {
   currentMap = mapById(id);
-  setTrackLayout(currentMap.points);
+  setTrackLayout(currentMap.points, currentMap.mode === 'ascent' ? { closed: false, width: 10, segments: 1200, gates: 17 } : {});
   rebuildTrackFeatures();
   rebuildTrackBarriers();
+  rebuildSnowCourse();
   return currentMap;
 }

@@ -1,0 +1,121 @@
+{
+  "name": "Windway — Frostbite Ascent",
+  "viewBox": "0 0 256 256",
+  "palette": {
+    "ink": "#263d52",
+    "snow": "#f3f8fb",
+    "ice": "#b9e1ed",
+    "steel": "#7aa7bf",
+    "coral": "#d47762"
+  },
+  "assets": [
+    {
+      "id": "snowman",
+      "title": "Snowman",
+      "description": "A grinning mountain co-driver in a rescue-coral scarf.",
+      "file": "snowman.svg"
+    },
+    {
+      "id": "snowy-tree",
+      "title": "Snowy tree",
+      "description": "A layered fir with heavy snow caps and a frosted trunk.",
+      "file": "snowy-tree.svg"
+    },
+    {
+      "id": "snowy-mountain",
+      "title": "Snowy mountain",
+      "description": "A switchback road climbs to a coral flag on a snowy summit.",
+      "file": "snowy-mountain.svg"
+    },
+    {
+      "id": "ice-patch",
+      "title": "Black ice",
+      "description": "A pale blue road patch with white cracks and a slippery wheel trail.",
+      "file": "ice-patch.svg"
+    },
+    {
+      "id": "ice-warning",
+      "title": "Ice warning",
+      "description": "An unmistakable coral-edged ice warning sign on a snowy post.",
+      "file": "ice-warning.svg"
+    },
+    {
+      "id": "snowbank",
+      "title": "Snowbank",
+      "description": "Sculpted drifts pile against a striped roadside snow marker.",
+      "file": "snowbank.svg"
+    },
+    {
+      "id": "snow-boulder",
+      "title": "Snow boulder",
+      "description": "A chunky ice-blue rock under a heavy white snow cap.",
+      "file": "snow-boulder.svg"
+    },
+    {
+      "id": "slalom-gate",
+      "title": "Slalom obstacle",
+      "description": "A solid snow block with coral stripes and an arrow pointing to the passing lane.",
+      "file": "slalom-gate.svg"
+    },
+    {
+      "id": "summit-flag",
+      "title": "Summit finish",
+      "description": "A frost-blue checkered flag above a snowy summit cairn.",
+      "file": "summit-flag.svg"
+    },
+    {
+      "id": "summit-trophy",
+      "title": "Summit trophy",
+      "description": "An ice-blue trophy with a mountain medallion and a summit ribbon.",
+      "file": "summit-trophy.svg"
+    },
+    {
+      "id": "mountain-hut",
+      "title": "Mountain hut",
+      "description": "A warm rescue hut at the base of the winter mountain.",
+      "file": "mountain-hut.svg"
+    },
+    {
+      "id": "track-minimap",
+      "title": "Ascent minimap",
+      "description": "A tall switchback trail, ice zones, and a summit flag, not a closed lap.",
+      "file": "track-minimap.svg"
+    },
+    {
+      "id": "route-badge",
+      "title": "Frostbite Ascent badge",
+      "description": "The crest of Windway’s hardest, coldest, longest climb.",
+      "file": "route-badge.svg"
+    },
+    {
+      "id": "checkpoint",
+      "title": "Winter checkpoint",
+      "description": "A coral mountain checkpoint gate with snow caps and flag markers.",
+      "file": "checkpoint.svg"
+    },
+    {
+      "id": "wind-gust",
+      "title": "Mountain wind",
+      "description": "Three rounded cold gusts carry a pair of snowflakes.",
+      "file": "wind-gust.svg"
+    },
+    {
+      "id": "snowflake",
+      "title": "Snowflake",
+      "description": "A six-point ice crystal with warm coral centre.",
+      "file": "snowflake.svg"
+    },
+    {
+      "id": "arctic-fox",
+      "title": "Arctic fox",
+      "description": "A curious white fox with a curled fluffy tail and dark winter paws.",
+      "file": "arctic-fox.svg"
+    },
+    {
+      "id": "penguin",
+      "title": "Penguin",
+      "description": "An enthusiastic winter spectator in a coral scarf.",
+      "file": "penguin.svg"
+    }
+  ]
+}

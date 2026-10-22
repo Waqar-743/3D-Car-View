@@ -4,7 +4,8 @@ import { CuboidCollider, RigidBody, useBeforePhysicsStep, useRapier, type Rapier
 import * as THREE from 'three';
 import CarVisual, { type CarMotion } from './CarVisual';
 import { carById } from './config';
-import { CHECKPOINTS, nearestTrackPoint, trackFrame } from './track';
+import { CHECKPOINTS, ROAD_WIDTH, TRACK_CLOSED, TRACK_LENGTH, nearestTrackPoint, trackFrame } from './track';
+import { snowDrivingOffset, surfaceAt } from './snowCourse';
 import { advanceRaceGate, crossedGate } from './driving';
 import { currentMap } from './maps';
 import { BODY_HALF_EXTENTS, BODY_OFFSET_Y, createMotionTools, getRespawnPose, PHYSICS_STEP, readHeading, recoveryReason, resetVehicleBody, RIDE_HEIGHT, stepVehicleMotion, type RecoveryReason } from './vehiclePhysics';
@@ -41,9 +42,9 @@ export default function Vehicle() {
     vehicleFrame.yaw = frame.yaw; vehicleFrame.speed = 0; vehicleFrame.steer = 0; vehicleFrame.shake = 0;
     vehicleFrame.drifting = false; vehicleFrame.grounded = true; vehicleFrame.boosting = false; vehicleFrame.resets = state.resets;
     Object.assign(motion.current, { speed: 0, steer: 0, lean: 0, bounce: 0 }); clearInput();
-    game.updateTelemetry({ speed: 0, elapsed: state.elapsed, lap: state.lap, checkpoint: state.checkpoint, progress: frame.progress, x: frame.position.x, z: frame.position.z, drifting: false, airborne: false, boosting: false, resets: state.resets });
+    game.updateTelemetry({ speed: 0, elapsed: state.elapsed, lap: state.lap, checkpoint: state.checkpoint, progress: frame.progress, x: frame.position.x, z: frame.position.z, drifting: false, airborne: false, boosting: false, resets: state.resets, altitude: frame.point.y, surface: surfaceAt(frame.progress).kind });
     game.beginRecovery(reason, state.checkpoint);
-    game.react('Back on the road. You’ve got this.', currentMap.id === 'jungle' ? 'imran' : 'crying-driver'); gameAudio.chime('crash');
+    game.react('Back on the road. You’ve got this.', currentMap.id === 'snow' ? 'snowman' : currentMap.id === 'jungle' ? 'imran' : 'crying-driver'); gameAudio.chime('crash');
   }, []);
 
   useEffect(() => { if (resetRequest > 0) resetToRoad(); }, [resetRequest, resetToRoad]);
@@ -65,13 +66,16 @@ export default function Vehicle() {
       const position = rb.translation(), velocity = rb.linvel(), yaw = readHeading(rb, vectors.current);
       const nearest = nearestTrackPoint(position.x, position.z);
       const forward = velocity.x * Math.sin(yaw) + velocity.z * Math.cos(yaw);
-      const target = trackFrame(nearest.progress + Math.max(0.014, Math.abs(forward) * 0.00065)).point;
+      const targetProgress = nearest.progress + (TRACK_CLOSED ? Math.max(0.014, Math.abs(forward) * 0.00065) : Math.max(14, Math.abs(forward) * 0.8) / TRACK_LENGTH);
+      const targetFrame = trackFrame(targetProgress);
+      const target = targetFrame.point.clone().addScaledVector(targetFrame.right, snowDrivingOffset(targetProgress));
       const desired = Math.atan2(target.x - position.x, target.z - position.z);
       const error = Math.atan2(Math.sin(desired - yaw), Math.cos(desired - yaw));
-      const targetSpeed = Math.abs(error) > 0.45 ? 22 : 33;
+      const bend = nearest.tangent.angleTo(trackFrame(nearest.progress + 28 / TRACK_LENGTH).tangent);
+      const targetSpeed = !TRACK_CLOSED ? (bend > 0.3 || Math.abs(error) > 0.25 ? 7 : surfaceAt(nearest.progress).kind === 'black-ice' ? 11 : 16) : Math.abs(error) > 0.45 ? 22 : 33;
       input = { throttle: forward < targetSpeed, brake: forward > targetSpeed + 2, left: error > 0.025, right: error < -0.025, handbrake: false };
     }
-    const { position, velocity, yaw, nearest, grounded, driving, drifting, boosting, boostStarted, launched } = stepVehicleMotion(rb, world, vectors.current, car, input, dt);
+    const { position, velocity, yaw, nearest, grounded, driving, drifting, boosting, boostStarted, launched, surface } = stepVehicleMotion(rb, world, vectors.current, car, input, dt);
     state.offRoadTime = nearest.distance > getDriveableHalfWidth(nearest.progress) ? state.offRoadTime + dt : 0;
     const failure = recoveryReason(position, nearest, state.offRoadTime);
     if (failure) { resetToRoad(failure); return; }
@@ -88,9 +92,9 @@ export default function Vehicle() {
       state.airTime = 0;
     }
     state.wasGrounded = grounded;
-    const gateIndex = (state.checkpoint + 1) % 8;
-    if (crossedGate(state.previous, position, CHECKPOINTS[gateIndex]) && Math.abs(position.y - CHECKPOINTS[gateIndex].point.y) < 3) {
-      const next = advanceRaceGate(state.checkpoint, state.lap, currentMap.laps);
+    const gateIndex = TRACK_CLOSED ? (state.checkpoint + 1) % CHECKPOINTS.length : Math.min(CHECKPOINTS.length - 1, state.checkpoint + 1);
+    if (crossedGate(state.previous, position, CHECKPOINTS[gateIndex], ROAD_WIDTH / 2 + 1) && Math.abs(position.y - CHECKPOINTS[gateIndex].point.y) < 3) {
+      const next = advanceRaceGate(state.checkpoint, state.lap, currentMap.laps, TRACK_CLOSED, CHECKPOINTS.length);
       const newLap = next.lap !== state.lap;
       state.checkpoint = next.checkpoint; state.lap = next.lap;
       if (next.finished) { game.finish(state.elapsed, state.resets); gameAudio.chime('finish'); gameAudio.stop(); }
@@ -98,6 +102,7 @@ export default function Vehicle() {
         vehicleFrame.checkpointFlash = 1;
         gameAudio.chime('checkpoint');
         if (newLap) { state.publish = 1; game.react(`Lap ${state.lap} of ${currentMap.laps}. Bring it home!`, 'tatheer'); }
+        else if (!TRACK_CLOSED) game.react(state.checkpoint === CHECKPOINTS.length - 2 ? 'The summit is right there. Keep it tidy.' : `Gate ${state.checkpoint}. Higher, colder, a little wilder.`, 'snowman');
         else if (state.checkpoint === 1 || state.checkpoint === 4 || state.checkpoint === 7) game.react(state.checkpoint === 7 ? 'Last stretch. Make it a good one.' : state.checkpoint === 4 ? 'Half a lap. Whole lot of attitude.' : 'That’s the spirit. Keep it rolling.');
       }
     }
@@ -105,7 +110,7 @@ export default function Vehicle() {
     state.publish += dt;
     if (state.publish > 0.1) {
       state.publish = 0;
-      game.updateTelemetry({ speed: Math.abs(driving.forward) * 3.6, elapsed: state.elapsed, lap: state.lap, checkpoint: state.checkpoint, progress: nearest.progress, x: position.x, z: position.z, drifting, airborne: !grounded && state.airTime > 0.1, boosting, resets: state.resets });
+      game.updateTelemetry({ speed: Math.abs(driving.forward) * 3.6, elapsed: state.elapsed, lap: state.lap, checkpoint: state.checkpoint, progress: nearest.progress, x: position.x, z: position.z, drifting, airborne: !grounded && state.airTime > 0.1, boosting, resets: state.resets, altitude: nearest.point.y, surface });
       gameAudio.update(driving.forward, input.throttle, drifting, true);
     }
   });
@@ -129,7 +134,7 @@ export default function Vehicle() {
     onCollisionEnter={({ other }) => {
       const state = simulation.current;
       if (other.rigidBodyObject?.name === 'barriers' && Math.abs(vehicleFrame.speed) > 6 && state.elapsed - state.lastCrash > 2) {
-        state.lastCrash = state.elapsed; vehicleFrame.shake = 0.35; gameAudio.chime('crash'); useGame.getState().react('The barrier says hello.', currentMap.id === 'jungle' ? 'imran' : 'crying-driver');
+        state.lastCrash = state.elapsed; vehicleFrame.shake = 0.35; gameAudio.chime('crash'); useGame.getState().react('The barrier says hello.', currentMap.id === 'snow' ? 'snowman' : currentMap.id === 'jungle' ? 'imran' : 'crying-driver');
       }
     }}
   >
@@ -176,6 +181,7 @@ export function DrivingEffects() {
   const particles = useRef(Array.from({ length: 36 }, () => ({ position: new THREE.Vector3(), age: 9, scale: 0 })));
   const cursor = useRef(0); const skidCursor = useRef(0); const timer = useRef(0); const object = useRef(new THREE.Object3D());
   const effects = useGame((state) => state.settings.effects);
+  const snow = useGame((state) => state.selectedMap === 'snow');
   useFrame((_, delta) => {
     if (!effects || useGame.getState().status !== 'running') return;
     const dt = Math.min(delta, 0.05); timer.current += dt;
@@ -183,7 +189,7 @@ export function DrivingEffects() {
     if (timer.current > 0.055 && Math.abs(vehicleFrame.speed) > 6 && vehicleFrame.grounded) {
       timer.current = 0;
       const nearest = nearestTrackPoint(p.x, p.z);
-      if (vehicleFrame.drifting || nearest.distance > 7) {
+      if (vehicleFrame.drifting || nearest.distance > ROAD_WIDTH / 2 || snow) {
         const particle = particles.current[cursor.current++ % particles.current.length]; particle.age = 0;
         particle.position.set(p.x - Math.sin(yaw) * 2, p.y - 0.1, p.z - Math.cos(yaw) * 2); particle.scale = 0.3;
       }
@@ -210,7 +216,7 @@ export function DrivingEffects() {
   }, [effects]);
   if (!effects) return null;
   return <>
-    <instancedMesh ref={dust} args={[undefined, undefined, 36]} frustumCulled={false}><icosahedronGeometry args={[1, 0]} /><meshBasicMaterial color="#e0cda6" transparent opacity={0.6} depthWrite={false} /></instancedMesh>
-    <instancedMesh ref={marks} args={[undefined, undefined, 140]} frustumCulled={false}><boxGeometry /><meshBasicMaterial color="#344c40" transparent opacity={0.5} depthWrite={false} /></instancedMesh>
+    <instancedMesh ref={dust} args={[undefined, undefined, 36]} frustumCulled={false}><icosahedronGeometry args={[1, 0]} /><meshBasicMaterial color={snow ? '#f3f8fb' : '#e0cda6'} transparent opacity={0.6} depthWrite={false} /></instancedMesh>
+    <instancedMesh ref={marks} args={[undefined, undefined, 140]} frustumCulled={false}><boxGeometry /><meshBasicMaterial color={snow ? '#527485' : '#344c40'} transparent opacity={0.5} depthWrite={false} /></instancedMesh>
   </>;
 }

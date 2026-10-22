@@ -1,4 +1,4 @@
-import { ROAD_WIDTH, TRACK_POINTS, TRACK_SEGMENTS, trackFrame } from './track';
+import { ROAD_WIDTH, TRACK_CLOSED, TRACK_POINTS, TRACK_SEGMENTS, trackFrame } from './track';
 
 type Position = [number, number, number];
 
@@ -31,18 +31,19 @@ export const DEFAULT_DRIVEABLE_HALF_WIDTH = ROAD_WIDTH / 2 + 0.05;
 // small overlaps seal joints on a curved bridge without invisible end walls.
 function buildBridgeSegments() { return TRACK_POINTS.map((frame, index) => {
   const next = TRACK_POINTS[(index + 1) % TRACK_SEGMENTS];
-  return Math.abs((frame.point.z + next.point.z) / 2) <= 34;
+  return TRACK_CLOSED && Math.abs((frame.point.z + next.point.z) / 2) <= 34;
 }); }
 let bridgeSegments = buildBridgeSegments();
 
 export function isBridgeProgress(progress: number) {
+  if (!TRACK_CLOSED) return false;
   const normalized = ((progress % 1) + 1) % 1;
   return bridgeSegments[Math.floor(normalized * TRACK_SEGMENTS) % TRACK_SEGMENTS];
 }
 
 /** The bridge shoulder is a real supported deck all the way to its solid rail. */
 export function getDriveableHalfWidth(progress: number) {
-  return isBridgeProgress(progress) ? BRIDGE_DRIVEABLE_HALF_WIDTH : DEFAULT_DRIVEABLE_HALF_WIDTH;
+  return isBridgeProgress(progress) ? BRIDGE_DRIVEABLE_HALF_WIDTH : ROAD_WIDTH / 2 + 0.05;
 }
 
 function buildBridgeDecks(): BridgeDeckSegment[] { return TRACK_POINTS.flatMap((frame, index) => {
@@ -66,6 +67,18 @@ function buildBridgeDecks(): BridgeDeckSegment[] { return TRACK_POINTS.flatMap((
 export let BRIDGE_DECK_SEGMENTS = buildBridgeDecks();
 
 function buildBarriers(): TrackBarrier[] { return TRACK_POINTS.flatMap<TrackBarrier>((frame, index) => {
+  if (!TRACK_CLOSED) {
+    if (index >= TRACK_SEGMENTS) return [];
+    const next = TRACK_POINTS[index + 1], turn = frame.tangent.angleTo(next.tangent);
+    if (index > 12 && index < TRACK_SEGMENTS - 20 && turn < 0.025 && index % 32 >= 20) return [];
+    return ([-1, 1] as const).map((side) => {
+      const a = frame.point.clone().addScaledVector(frame.right, side * (ROAD_WIDTH / 2 + 0.3));
+      const b = next.point.clone().addScaledVector(next.right, side * (ROAD_WIDTH / 2 + 0.3));
+      return { id: `snow-rail-${index}-${side}`, kind: 'roadside' as const, side, progress: index / TRACK_SEGMENTS,
+        position: [(a.x + b.x) / 2, (a.y + b.y) / 2 + 0.65, (a.z + b.z) / 2] as Position,
+        yaw: Math.atan2(b.x - a.x, b.z - a.z), halfExtents: [0.28, 0.65, Math.hypot(b.x - a.x, b.z - a.z) / 2 + 0.16] as Position };
+    });
+  }
   if (bridgeSegments[index]) {
     const next = TRACK_POINTS[(index + 1) % TRACK_SEGMENTS];
     return ([-1, 1] as const).map((side) => {
