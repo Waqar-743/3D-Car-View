@@ -30,8 +30,15 @@ const F1CarIcon: React.FC<{ className?: string; style?: React.CSSProperties }> =
   </svg>
 );
 
-export const LoadingOverlay: React.FC = () => {
-  const { isLoading, loadingProgress } = useCarStore();
+interface LoadingOverlayProps {
+  onRetry: () => void;
+  onLoadDefault?: () => void;
+}
+
+export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ onRetry, onLoadDefault }) => {
+  const isLoading = useCarStore((state) => state.isLoading);
+  const loadingProgress = useCarStore((state) => state.loadingProgress);
+  const loadError = useCarStore((state) => state.loadError);
   const [statusText, setStatusText] = React.useState('INITIALIZING SYSTEMS');
   
   React.useEffect(() => {
@@ -52,7 +59,7 @@ export const LoadingOverlay: React.FC = () => {
     else setStatusText(statuses[5]);
   }, [loadingProgress]);
 
-  if (!isLoading) return null;
+  if (!isLoading && !loadError) return null;
   
   return (
     <motion.div
@@ -61,13 +68,23 @@ export const LoadingOverlay: React.FC = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
       className="absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+      role={loadError ? 'alert' : 'status'}
+      aria-live="polite"
+      aria-label={loadError ? '3D viewer failed to load' : 'Loading 3D viewer'}
       style={{
-        background: 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)',
+        background: 'radial-gradient(circle at center, #1e1d1a 0%, #0d0d0c 100%)',
       }}
     >
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(212,175,55,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.08) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+            maskImage: 'radial-gradient(circle at center, black, transparent 72%)',
+          }}
+        />
       </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center px-4 max-w-4xl w-full">
@@ -88,23 +105,57 @@ export const LoadingOverlay: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-center mb-12"
         >
-          <h1 
-            className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tighter mb-4"
+          <h1
+            className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-4 text-balance"
             style={{ 
               color: '#FFFFFF',
               fontFamily: "'Playfair Display', serif",
               letterSpacing: '-0.02em'
             }}
           >
-            PRECISION <span className="text-[#D4AF37]">ENGINEERING</span>
+            {loadError ? 'VIEWER ' : 'PRECISION '}
+            <span className="text-[#D4AF37]">{loadError ? 'OFFLINE' : 'ENGINEERING'}</span>
           </h1>
-          <p className="text-[#D4AF37] font-mono tracking-[0.3em] text-xs md:text-sm uppercase opacity-80">
-            Automotive Visualization Studio
-          </p>
+          {loadError ? (
+            <p className="mx-auto max-w-xl text-sm md:text-base leading-relaxed text-white/65 text-pretty">
+              We couldn&apos;t prepare this 3D model. Check your connection or try loading it again.
+            </p>
+          ) : (
+            <p className="text-[#D4AF37] font-mono tracking-[0.3em] text-xs md:text-sm uppercase opacity-80">
+              Automotive Visualization Studio
+            </p>
+          )}
         </motion.div>
         
-        {/* Progress Section */}
-        <div className="w-full max-w-md">
+        {/* Progress / recovery section */}
+        {loadError ? (
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              type="button"
+              onClick={onRetry}
+              className="min-w-36 rounded-lg bg-gold px-5 py-3 text-sm font-semibold text-charcoal transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
+            >
+              Try again
+            </button>
+            {onLoadDefault && (
+              <button
+                type="button"
+                onClick={onLoadDefault}
+                className="min-w-36 rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-medium text-white/80 transition-colors duration-200 hover:border-gold/60 hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
+              >
+                Load McLaren MCL38
+              </button>
+            )}
+          </div>
+        ) : (
+        <div
+          className="w-full max-w-md"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(loadingProgress)}
+          aria-valuetext={`${Math.round(loadingProgress)} percent loaded`}
+        >
           <div className="flex justify-between items-end mb-2">
             <span className="text-[10px] md:text-xs font-mono text-white/40 tracking-widest uppercase">
               {statusText}
@@ -141,18 +192,19 @@ export const LoadingOverlay: React.FC = () => {
              </div>
           </div>
         </div>
+        )}
       </div>
       
       {/* Bottom Corner Intel */}
-      <div className="absolute bottom-8 left-8 hidden md:block border-l border-white/20 pl-4 py-1">
+      {!loadError && <div className="absolute bottom-8 left-8 hidden md:block border-l border-white/20 pl-4 py-1">
         <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">Environment</p>
         <p className="text-xs font-mono text-white/60 uppercase">Raytraced Garage v2.4</p>
-      </div>
+      </div>}
       
-      <div className="absolute bottom-8 right-8 hidden md:block border-r border-white/20 pr-4 py-1 text-right">
+      {!loadError && <div className="absolute bottom-8 right-8 hidden md:block border-r border-white/20 pr-4 py-1 text-right">
         <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">Hardware</p>
         <p className="text-xs font-mono text-white/60 uppercase">WebGL 2.0 Enabled</p>
-      </div>
+      </div>}
     </motion.div>
   );
 };

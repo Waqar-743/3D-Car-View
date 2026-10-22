@@ -31,6 +31,7 @@ interface CarStore {
   // Zoom state
   zoom: number;
   setZoom: (zoom: number) => void;
+  setCameraTelemetry: (polar: number, azimuth: number, zoom: number) => void;
   
   // Price visibility
   showPrice: boolean;
@@ -50,10 +51,14 @@ interface CarStore {
   isLoading: boolean;
   loadingProgress: number;
   setLoading: (loading: boolean, progress?: number) => void;
+  loadError: string | null;
+  setLoadError: (error: string | null) => void;
   
   // Auto-rotate
   autoRotate: boolean;
   setAutoRotate: (rotate: boolean) => void;
+  isInteracting: boolean;
+  setInteracting: (interacting: boolean) => void;
   
   // Selected variant
   selectedVariant: number;
@@ -97,16 +102,32 @@ interface CarStore {
 export const useCarStore = create<CarStore>((set) => ({
   // Selected car
   selectedCarId: 'mclaren-mcl38',
-  setSelectedCar: (carId) => set({ selectedCarId: carId, showPrice: false }),
+  setSelectedCar: (carId) => set((state) => state.selectedCarId === carId
+    ? { showPrice: false }
+    : {
+        selectedCarId: carId,
+        showPrice: false,
+        isLoading: true,
+        loadingProgress: 0,
+        loadError: null,
+      }),
   
   // Rotation
   rotationX: 0,
   rotationY: 0,
-  setRotation: (x, y) => set({ rotationX: x, rotationY: y }),
+  setRotation: (x, y) => set((state) => state.rotationX === x && state.rotationY === y
+    ? state : { rotationX: x, rotationY: y }),
   
   // Zoom
   zoom: 1,
   setZoom: (zoom) => set({ zoom: Math.max(0.5, Math.min(3, zoom)) }),
+  setCameraTelemetry: (polar, azimuth, zoom) => set((state) => {
+    const rotationX = Math.round(polar * 1000) / 1000;
+    const rotationY = Math.round(azimuth * 1000) / 1000;
+    const nextZoom = Math.round(Math.max(0.5, Math.min(3, zoom)) * 100) / 100;
+    if (state.rotationX === rotationX && state.rotationY === rotationY && state.zoom === nextZoom) return state;
+    return { rotationX, rotationY, zoom: nextZoom };
+  }),
   
   // Price
   showPrice: false,
@@ -127,11 +148,19 @@ export const useCarStore = create<CarStore>((set) => ({
   // Loading
   isLoading: true,
   loadingProgress: 0,
-  setLoading: (loading, progress = 0) => set({ isLoading: loading, loadingProgress: progress }),
+  setLoading: (loading, progress = 0) => set({
+    isLoading: loading,
+    loadingProgress: progress,
+    ...(loading ? { loadError: null } : {}),
+  }),
+  loadError: null,
+  setLoadError: (error) => set({ loadError: error, isLoading: false }),
   
   // Auto-rotate
   autoRotate: false,
   setAutoRotate: (rotate) => set({ autoRotate: rotate }),
+  isInteracting: false,
+  setInteracting: (interacting) => set({ isInteracting: interacting }),
   
   // Variant
   selectedVariant: 0,
@@ -150,11 +179,8 @@ export const useCarStore = create<CarStore>((set) => ({
   
   // NEW: Demo mode
   demoMode: false,
-  setDemoMode: (demo) => set({ demoMode: demo, autoRotate: demo }),
-  toggleDemoMode: () => set((state) => ({ 
-    demoMode: !state.demoMode, 
-    autoRotate: !state.demoMode 
-  })),
+  setDemoMode: (demo) => set({ demoMode: demo }),
+  toggleDemoMode: () => set((state) => ({ demoMode: !state.demoMode })),
   demoAutoStarted: false,
   setDemoAutoStarted: (started) => set({ demoAutoStarted: started }),
   demoTransitionPhase: 'idle',
@@ -179,5 +205,6 @@ export const useCarStore = create<CarStore>((set) => ({
     showPrice: false,
     demoMode: false,
     autoRotate: false,
+    isInteracting: false,
   }),
 }));

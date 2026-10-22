@@ -1,55 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>F1 Experience - 3D Car Configurator</title>
-    <meta name="description" content="Premium interactive 3D Formula 1 car viewer - Explore every angle of F1 vehicles" />
+    <link rel="icon" type="image/svg+xml" href="./branding/windway-mark.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f3e7" />
+    <title>Windway — Take the long way.</title>
+    <meta name="description" content="Two wild worlds. Two very fast cars. Race the alpine loop or the dense jungle Canopy Run, with drifting, boost jumps, river crossings, and a time to beat." />
   </head>
-  <body style="background-color: #0a0a0a; margin: 0; padding: 0;">
+  <body style="margin:0;background:#f7f3e7;overflow:hidden">
     <div id="root">
-      {/* Initial static loader while JS bundle downloads */}
-      <div id="initial-loader" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-        z-index: 9999;
-        font-family: 'Inter', sans-serif;
-      ">
-        <div style="
-          width: 40px;
-          height: 40px;
-          border: 2px solid rgba(212, 175, 55, 0.1);
-          border-top: 2px solid #d4af37;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 20px;
-        "></div>
-        <div style="
-          color: #d4af37;
-          font-size: 10px;
-          letter-spacing: 5px;
-          text-transform: uppercase;
-        ">Initializing</div>
+      <div id="initial-loader" style="position:fixed;inset:0;display:grid;place-content:center;text-align:center;color:#30483d;font-family:system-ui,sans-serif">
+        <img src="./branding/windway-mark.svg" width="80" height="80" alt="" style="margin:0 auto 18px" />
+        <strong style="font-size:23px;letter-spacing:-1px">WINDWAY</strong>
+        <span style="font-size:10px;letter-spacing:2px;margin-top:9px">THE LONG WAY IS LOADING.</span>
       </div>
     </div>
-    <style>
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      body {
-        overflow: hidden;
-      }
-    </style>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>

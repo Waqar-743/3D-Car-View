@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -16,10 +16,10 @@
 
   body {
     @apply bg-charcoal text-light-gray antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
     margin: 0;
     padding: 0;
-    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   /* Custom scrollbar for webkit browsers */

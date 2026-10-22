@@ -47,6 +47,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     <div className="relative">
       {/* Toggle Button */}
       <motion.button
+        type="button"
+        aria-label="Choose paint color"
+        aria-expanded={isOpen}
         onClick={onToggle}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

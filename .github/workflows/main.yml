@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Test driving, maps and interface
+        run: npm run test:game
+
       - name: Build production
         run: npm run build -- --base "/${GITHUB_REPOSITORY#*/}/"
 

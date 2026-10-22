@@ -5,11 +5,6 @@ import * as THREE from 'three';
 // Base URL for assets (handles GitHub Pages subdirectory)
 const BASE = import.meta.env.BASE_URL || '/';
 
-// Preload textures
-useTexture.preload(`${BASE}car-images/img/f1-from-left-far.png`);
-useTexture.preload(`${BASE}car-images/img/from-right.png`);
-useTexture.preload(`${BASE}car-images/img/from-right-close.png`);
-
 interface WallDecorationProps {
   imagePath?: string;
   position?: [number, number, number];
@@ -18,7 +13,7 @@ interface WallDecorationProps {
 }
 
 export const WallDecoration: React.FC<WallDecorationProps> = ({
-  imagePath = `${BASE}car-images/img/f1-from-left-far.png`,
+  imagePath = `${BASE}optimized-images/f1-from-left-far.webp`,
   position = [-12.4, 5, -5], // On the left wall
   rotation = [0, Math.PI / 2, 0], // Facing inward
   scale = [10, 6],
@@ -52,7 +47,7 @@ export const WallDecoration: React.FC<WallDecorationProps> = ({
 
 // Second wall decoration on back wall
 export const BackWallDecoration: React.FC<WallDecorationProps> = ({
-  imagePath = `${BASE}car-images/img/from-right.png`,
+  imagePath = `${BASE}optimized-images/from-right.webp`,
   position = [6, 5, -14.9], // On the back wall, right side
   rotation = [0, 0, 0], // Facing forward
   scale = [8, 5],
@@ -86,7 +81,7 @@ export const BackWallDecoration: React.FC<WallDecorationProps> = ({
 
 // Corner decoration - larger hero image
 export const CornerWallDecoration: React.FC<WallDecorationProps> = ({
-  imagePath = `${BASE}car-images/img/from-right-close.png`,
+  imagePath = `${BASE}optimized-images/from-right-close.webp`,
   position = [-6, 5, -14.9], // Back wall, left side
   rotation = [0, 0, 0],
   scale = [8, 5],

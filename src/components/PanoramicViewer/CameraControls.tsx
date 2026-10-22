@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { useCarStore } from '../../store/carStore';
 
 interface CameraControlsProps {
@@ -67,8 +68,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   minPolarAngle = Math.PI / 6,    // 30 degrees from top
   maxPolarAngle = Math.PI / 2.2,  // ~82 degrees (near horizontal)
 }) => {
-  const controlsRef = useRef<any>(null);
-  const { camera } = useThree();
+  const controlsRef = useRef<OrbitControlsImpl>(null);
+  const camera = useThree((state) => state.camera);
+  const invalidate = useThree((state) => state.invalidate);
+  const lastTelemetryAt = useRef(0);
   
   // Demo mode state
   const demoKeyframeIndex = useRef(0);
@@ -77,14 +80,35 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   const demoStartTarget = useRef(new THREE.Vector3(0, 0.5, 0));
   const demoInitialized = useRef(false);
   
-  const { 
-    setZoom, 
-    setRotation, 
-    autoRotate,
-    demoMode,
-    introComplete,
-    setIntroComplete,
-  } = useCarStore();
+  const autoRotate = useCarStore((state) => state.autoRotate);
+  const isInteracting = useCarStore((state) => state.isInteracting);
+  const setInteracting = useCarStore((state) => state.setInteracting);
+  const demoMode = useCarStore((state) => state.demoMode);
+  const introComplete = useCarStore((state) => state.introComplete);
+  const setIntroComplete = useCarStore((state) => state.setIntroComplete);
+
+  // OrbitControls exposes a matched start/end lifecycle. Global release
+  // fallbacks cover pointer cancellation, tab changes, and releases that
+  // happen outside the canvas so autorotation can never remain paused.
+  useEffect(() => {
+    const releaseInteraction = () => setInteracting(false);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') releaseInteraction();
+    };
+
+    window.addEventListener('pointerup', releaseInteraction);
+    window.addEventListener('pointercancel', releaseInteraction);
+    window.addEventListener('blur', releaseInteraction);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pointerup', releaseInteraction);
+      window.removeEventListener('pointercancel', releaseInteraction);
+      window.removeEventListener('blur', releaseInteraction);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      releaseInteraction();
+    };
+  }, [setInteracting]);
   
   // Intro camera animation - sweep from low angle to standard view
   useEffect(() => {
@@ -97,6 +121,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
     
     camera.position.copy(startPos);
     camera.lookAt(0, 0.5, 0);
+    invalidate();
     
     let animationId: number;
     const duration = 2500; // 2.5 seconds
@@ -111,6 +136,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       
       camera.position.lerpVectors(startPos, endPos, eased);
       camera.lookAt(0, 0.5, 0);
+      invalidate();
       
       if (progress < 1) {
         animationId = requestAnimationFrame(animate);
@@ -128,7 +154,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       clearTimeout(timeoutId);
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [camera, introComplete, setIntroComplete]);
+  }, [camera, introComplete, setIntroComplete, invalidate]);
   
   // Reset demo when toggled on
   useEffect(() => {
@@ -163,13 +189,13 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
         camera.position.lerpVectors(demoStartPos.current, keyframe.position, eased);
         
         // Lerp target
-        const currentTarget = new THREE.Vector3().lerpVectors(
+        controlsRef.current.target.lerpVectors(
           demoStartTarget.current,
           keyframe.target,
           eased
         );
-        controlsRef.current.target.copy(currentTarget);
         controlsRef.current.update();
+        invalidate();
         
         // Move to next keyframe
         if (progress >= 1) {
@@ -181,12 +207,6 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
         return;
       }
       
-      // Normal tracking
-      if (!autoRotate && !demoMode) {
-        const azimuthalAngle = controlsRef.current.getAzimuthalAngle();
-        const polarAngle = controlsRef.current.getPolarAngle();
-        setRotation(polarAngle, azimuthalAngle);
-      }
     }
   });
   
@@ -200,7 +220,9 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       maxDistance={maxDistance}
       minPolarAngle={minPolarAngle}
       maxPolarAngle={maxPolarAngle}
-      autoRotate={autoRotate && !demoMode}
+      onStart={() => setInteracting(true)}
+      onEnd={() => setInteracting(false)}
+      autoRotate={autoRotate && !demoMode && !isInteracting}
       autoRotateSpeed={1.5}
       enableDamping
       dampingFactor={0.08}
@@ -208,10 +230,14 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       zoomSpeed={0.8}
       target={[0, 0.5, 0]}
       onChange={() => {
-        if (camera && !demoMode) {
-          const distance = camera.position.length();
-          setZoom(8 / distance);
-        }
+        const now = performance.now();
+        if (demoMode || !controlsRef.current || now - lastTelemetryAt.current < 100) return;
+        lastTelemetryAt.current = now;
+        useCarStore.getState().setCameraTelemetry(
+          controlsRef.current.getPolarAngle(),
+          controlsRef.current.getAzimuthalAngle(),
+          8 / camera.position.distanceTo(controlsRef.current.target),
+        );
       }}
     />
   );

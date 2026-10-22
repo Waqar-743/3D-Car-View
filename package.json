@@ -1,5 +1,5 @@
 {
-  "name": "luxury-car-360-viewer",
+  "name": "windway",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -7,11 +7,17 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:game": "node --max-semi-space-size=4 scripts/test-game.mjs && node --max-semi-space-size=4 scripts/test-barriers.mjs && node --max-semi-space-size=4 scripts/test-barriers.mjs --map=jungle && node --max-semi-space-size=4 scripts/test-maps.mjs && node --max-semi-space-size=4 scripts/test-ui.mjs",
+    "test:barriers": "node --max-semi-space-size=4 scripts/test-barriers.mjs",
+    "test:maps": "node --max-semi-space-size=4 scripts/test-maps.mjs",
+    "test:ui": "node --max-semi-space-size=4 scripts/test-ui.mjs",
+    "optimize:models": "node scripts/optimize-models.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.92.7",
     "@react-three/fiber": "^8.15.12",
+    "@react-three/rapier": "^1.5.0",
     "@types/three": "^0.181.0",
     "framer-motion": "^12.23.24",
     "react": "^18.2.0",
@@ -20,6 +26,9 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
@@ -29,7 +38,9 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "meshoptimizer": "^1.3.0",
     "postcss": "^8.4.32",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"

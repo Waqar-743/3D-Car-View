@@ -1,6 +1,6 @@
-import React, { useMemo, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Preload } from '@react-three/drei';
+import React, { useMemo, Suspense, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { useGLTF, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import CarModel3D from './CarModel3D';
 import Lighting from './Lighting';
@@ -8,6 +8,42 @@ import CameraControls from './CameraControls';
 import { HotspotData } from './Hotspots';
 import { WallDecoration, BackWallDecoration, CornerWallDecoration } from './WallDecoration';
 import { useCarStore } from '../../store/carStore';
+import { getAllCars, getCarById } from '../../config/carModels';
+import { getRenderQuality } from '../../utils/renderQuality';
+import PerformanceProbe from './PerformanceProbe';
+
+// Progress reporter component to communicate with store
+const ProgressReporter: React.FC = () => {
+  const progress = useProgress((state) => state.progress);
+  const setLoading = useCarStore((state) => state.setLoading);
+  const isLoading = useCarStore((state) => state.isLoading);
+  const loadError = useCarStore((state) => state.loadError);
+
+  useEffect(() => {
+    // Only the selected model may complete loading. Background prefetches
+    // must not bring the overlay back or report a cached model as unready.
+    if (isLoading && !loadError) setLoading(true, Math.min(95, progress));
+  }, [progress, isLoading, loadError, setLoading]);
+
+  return null;
+};
+
+const WebGLContextReporter: React.FC<{ onError?: (error: Error) => void }> = ({ onError }) => {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      onError?.(new Error('The 3D renderer stopped responding.'));
+    };
+
+    canvas.addEventListener('webglcontextlost', handleContextLost);
+    return () => canvas.removeEventListener('webglcontextlost', handleContextLost);
+  }, [gl, onError]);
+
+  return null;
+};
 
 // Garage environment component
 const GarageEnvironment: React.FC = React.memo(() => {
@@ -55,7 +91,7 @@ const GarageEnvironment: React.FC = React.memo(() => {
   return (
     <group>
       {/* Main floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[garageWidth, garageDepth]} />
         <primitive object={floorMaterial} attach="material" />
       </mesh>
@@ -170,15 +206,49 @@ GarageEnvironment.displayName = 'GarageEnvironment';
 
 interface PanoramicCanvasProps {
   onHotspotClick?: (hotspot: HotspotData) => void;
+  onError?: (error: Error) => void;
 }
 
-export const PanoramicCanvas: React.FC<PanoramicCanvasProps> = ({ onHotspotClick }) => {
-  const { selectedCarId } = useCarStore();
+export const PanoramicCanvas: React.FC<PanoramicCanvasProps> = ({ onHotspotClick, onError }) => {
+  const selectedCarId = useCarStore((state) => state.selectedCarId);
+  const isLoading = useCarStore((state) => state.isLoading);
+  const isInteracting = useCarStore((state) => state.isInteracting);
+  const demoMode = useCarStore((state) => state.demoMode);
+  const quality = useMemo(getRenderQuality, []);
+
+  // Fetch one alternate model only when the active model is ready and the
+  // browser reports enough network, memory, and CPU capacity. The active
+  // model always loads on demand through CarModel3D.
+  useEffect(() => {
+    if (isLoading || isInteracting || demoMode || !getRenderQuality().prefetch) return;
+
+    const selectedPath = getCarById(selectedCarId)?.modelPath;
+    const alternatePath = Array.from(new Set(getAllCars().map((car) => car.modelPath)))
+      .find((path) => path !== selectedPath);
+    if (!alternatePath) return;
+
+    let idleHandle: number | undefined;
+    const timer = window.setTimeout(() => {
+      const prefetch = () => {
+        if (getRenderQuality().prefetch) useGLTF.preload(alternatePath, false, true);
+      };
+      if (window.requestIdleCallback) {
+        idleHandle = window.requestIdleCallback(prefetch, { timeout: 4000 });
+      } else {
+        prefetch();
+      }
+    }, 3000);
+    return () => {
+      window.clearTimeout(timer);
+      if (idleHandle !== undefined) window.cancelIdleCallback(idleHandle);
+    };
+  }, [isLoading, selectedCarId, isInteracting, demoMode]);
   
   return (
     <Canvas
-      shadows="soft"
-      dpr={[1, 1.5]}
+      frameloop="demand"
+      shadows={quality.shadows ? 'soft' : false}
+      dpr={quality.dpr}
       camera={{
         fov: 45,
         near: 0.1,
@@ -186,7 +256,7 @@ export const PanoramicCanvas: React.FC<PanoramicCanvasProps> = ({ onHotspotClick
         position: [0, 2, 10],
       }}
       gl={{
-        antialias: true,
+        antialias: quality.antialias,
         alpha: false,
         powerPreference: 'high-performance',
         stencil: false,
@@ -197,8 +267,10 @@ export const PanoramicCanvas: React.FC<PanoramicCanvasProps> = ({ onHotspotClick
         background: 'linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
       }}
     >
+      <ProgressReporter />
+      <WebGLContextReporter onError={onError} />
       {/* Lighting */}
-      <Lighting />
+      <Lighting shadows={quality.shadows} shadowMapSize={quality.shadowMapSize} />
       
       {/* Garage environment */}
       <GarageEnvironment />
@@ -215,9 +287,8 @@ export const PanoramicCanvas: React.FC<PanoramicCanvasProps> = ({ onHotspotClick
       
       {/* Camera Controls */}
       <CameraControls />
+      {import.meta.env.DEV && new URLSearchParams(window.location.search).has('performance') && <PerformanceProbe />}
       
-      {/* Preload assets */}
-      <Preload all />
     </Canvas>
   );
 };

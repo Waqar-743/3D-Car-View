@@ -29,7 +29,7 @@ export const CAR_MODELS: Record<string, CarModel> = {
     imageCount: 11,
     active: true,
     scale: 2.5,
-    position: [0, 0.5, 0],
+    position: [0, 0, 0],
     rotationOffset: 0,
   },
   "mercedes-w14": {
@@ -43,7 +43,7 @@ export const CAR_MODELS: Record<string, CarModel> = {
     imageCount: 11,
     active: true,
     scale: 2.5,
-    position: [0, 0.5, 0],
+    position: [0, 0, 0],
     rotationOffset: 0,
   },
   "mclaren-mcl36": {
@@ -57,7 +57,7 @@ export const CAR_MODELS: Record<string, CarModel> = {
     imageCount: 11,
     active: false, // Disabled - GLTF model has loading issues
     scale: 2.5,
-    position: [0, 0.5, 0],
+    position: [0, 0, 0],
     rotationOffset: 0,
   },
   "redbull-rb19": {
@@ -69,9 +69,9 @@ export const CAR_MODELS: Record<string, CarModel> = {
     modelPath: `${BASE}models/mclaren-mcl38/f1_2024_mclaren_mcl38.glb`,
     fallbackImages: `${BASE}car-images/`,
     imageCount: 11,
-    active: true,
+    active: false, // Placeholder: no distinct Red Bull model is supplied yet.
     scale: 2.5,
-    position: [0, 0.5, 0],
+    position: [0, 0, 0],
     rotationOffset: 0,
   },
   "ferrari-sf23": {
@@ -83,9 +83,9 @@ export const CAR_MODELS: Record<string, CarModel> = {
     modelPath: `${BASE}models/mercedes-w14/f1_2023_mercedes_amg_w14_e_performance_s1.glb`,
     fallbackImages: `${BASE}car-images/`,
     imageCount: 11,
-    active: true,
+    active: false, // Placeholder: no distinct Ferrari model is supplied yet.
     scale: 2.5,
-    position: [0, 0.5, 0],
+    position: [0, 0, 0],
     rotationOffset: 0,
   },
 };

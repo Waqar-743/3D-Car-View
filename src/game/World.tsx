@@ -1,0 +1,209 @@
+import { memo, useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Billboard, useTexture } from '@react-three/drei';
+import { CuboidCollider, RigidBody } from '@react-three/rapier';
+import * as THREE from 'three';
+import { CHECKPOINTS, ROAD_WIDTH, TRACK_POINTS, nearestTrackPoint, ribbonGeometry, seededRandom, trackFrame } from './track';
+import { BOOST_JUMP, JUMP_STRIPES, jumpRampGeometry } from './trackFeatures';
+import { art } from './config';
+import { useGame } from './store';
+import { BRIDGE_DECK_SEGMENTS, BRIDGE_SUPPORTS, TRACK_BARRIERS } from './trackBarriers';
+import { currentMap } from './maps';
+
+const INK = '#30483d';
+function Instances({ points, kind, color, colors }: { points: { position: [number, number, number]; scale: [number, number, number]; rotation?: number }[]; kind: 'cone' | 'box' | 'rock' | 'sphere'; color: string; colors?: string[] }) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const object = new THREE.Object3D(); const tint = new THREE.Color();
+    points.forEach((point, index) => {
+      object.position.fromArray(point.position); object.scale.fromArray(point.scale); object.rotation.set(0, point.rotation ?? 0, 0); object.updateMatrix();
+      ref.current!.setMatrixAt(index, object.matrix);
+      if (colors) ref.current!.setColorAt(index, tint.set(colors[index % colors.length]));
+    });
+    ref.current.instanceMatrix.needsUpdate = true;
+    if (ref.current.instanceColor) ref.current.instanceColor.needsUpdate = true;
+    ref.current.computeBoundingSphere();
+  }, [points, colors]);
+  return <instancedMesh ref={ref} args={[undefined, undefined, points.length]} castShadow={kind === 'cone'} receiveShadow>
+    {kind === 'cone' ? <coneGeometry args={[1, 1, 7]} /> : kind === 'rock' ? <icosahedronGeometry args={[1, 0]} /> : kind === 'sphere' ? <sphereGeometry args={[1, 8, 6]} /> : <boxGeometry args={[1, 1, 1]} />}
+    <meshLambertMaterial color={colors ? '#ffffff' : color} flatShading />
+  </instancedMesh>;
+}
+
+const Forest = memo(({ low }: { low: boolean }) => {
+  const trees = useMemo(() => {
+    const random = seededRandom(3219); const result = [];
+    for (let i = 0; i < (low ? 260 : 630); i++) {
+      const x = (random() - 0.5) * 590; const z = (random() - 0.5) * 520;
+      const size = 0.8 + random() * 1.3;
+      if (Math.abs(z) < 33 || nearestTrackPoint(x, z).distance < 15 || (x > -30 && x < 70 && z > 130 && z < 170)) continue;
+      result.push({ x, z, size });
+    }
+    return result;
+  }, [low]);
+  const trunks = useMemo(() => trees.map(({ x, z, size }) => ({ position: [x, size * 2, z] as [number, number, number], scale: [size * 0.7, size * 4, size * 0.7] as [number, number, number] })), [trees]);
+  const tops = useMemo(() => trees.flatMap(({ x, z, size }) => [0, 1, 2].map((level) => ({ position: [x, size * (3.5 + level * 1.7), z] as [number, number, number], scale: [size * (3.1 - level * 0.65), size * 4.4, size * (3.1 - level * 0.65)] as [number, number, number] }))), [trees]);
+  return <><Instances points={trunks} kind="box" color="#a88057" /><Instances points={tops} kind="cone" color="#82a783" colors={['#7fa681', '#67927b', '#99b88a']} /></>;
+});
+
+const Mountains = memo(() => {
+  const mountains = useMemo(() => {
+    const random = seededRandom(892);
+    return Array.from({ length: 24 }, (_, index) => {
+      const angle = index / 24 * Math.PI * 2; const radius = 340 + random() * 30; const height = 55 + random() * 80;
+      return { x: Math.sin(angle) * radius, z: Math.cos(angle) * radius, height, width: 45 + random() * 38 };
+    });
+  }, []);
+  const bodies = useMemo(() => mountains.map((m) => ({ position: [m.x, m.height / 2 - 9, m.z] as [number, number, number], scale: [m.width, m.height, m.width] as [number, number, number] })), [mountains]);
+  const peaks = useMemo(() => mountains.map((m) => ({ position: [m.x, m.height * 0.86 - 9, m.z] as [number, number, number], scale: [m.width * 0.29, m.height * 0.29, m.width * 0.29] as [number, number, number] })), [mountains]);
+  return <><Instances points={bodies} kind="cone" color="#8da99b" colors={['#88a69a', '#9db4a4', '#a8bda8']} /><Instances points={peaks} kind="cone" color="#f7f1dd" /></>;
+});
+
+function River() {
+  const lines = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => { if (lines.current) lines.current.position.x = (clock.elapsedTime * 2) % 18; });
+  return <group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.05, 0]} receiveShadow><planeGeometry args={[1000, 47]} /><meshLambertMaterial color="#71b8c5" /></mesh>
+    <group ref={lines}>
+      {Array.from({ length: 45 }, (_, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[(i % 15) * 28 - 215, -1.025, Math.floor(i / 15) * 12 - 12]}><planeGeometry args={[7 + (i % 3) * 3, 0.25]} /><meshBasicMaterial color="#b7dfd3" transparent opacity={0.6} /></mesh>)}
+    </group>
+  </group>;
+}
+
+function Eagle({ offset = 0 }: { offset?: number }) {
+  const group = useRef<THREE.Group>(null); const left = useRef<THREE.Group>(null); const right = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime * 0.09 + offset;
+    if (group.current) { group.current.position.set(Math.sin(t) * 95, 27 + Math.sin(t * 2) * 5, Math.cos(t) * 80); group.current.rotation.y = t + Math.PI / 2; }
+    if (left.current && right.current) { left.current.rotation.z = Math.sin(clock.elapsedTime * 2.2 + offset) * 0.2; right.current.rotation.z = -left.current.rotation.z; }
+  });
+  return <group ref={group} scale={1.7}>
+    <mesh scale={[0.3, 0.28, 0.85]}><sphereGeometry args={[1, 8, 6]} /><meshLambertMaterial color="#765843" flatShading /></mesh>
+    <mesh position={[0, 0.15, 0.75]}><sphereGeometry args={[0.3, 8, 6]} /><meshLambertMaterial color="#fff7e8" /></mesh>
+    <mesh position={[0, 0.1, 1.03]} rotation={[Math.PI / 2, 0, 0]}><coneGeometry args={[0.16, 0.4, 4]} /><meshLambertMaterial color="#edbc59" /></mesh>
+    <group ref={left}><mesh position={[-1, 0, 0]} rotation={[0, 0, -0.08]} scale={[2, 0.1, 0.8]}><boxGeometry /><meshLambertMaterial color="#8c694b" /></mesh></group>
+    <group ref={right}><mesh position={[1, 0, 0]} rotation={[0, 0, 0.08]} scale={[2, 0.1, 0.8]}><boxGeometry /><meshLambertMaterial color="#8c694b" /></mesh></group>
+  </group>;
+}
+
+function Goat({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) {
+  const head = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => { if (head.current) head.current.rotation.z = Math.sin(clock.elapsedTime * 0.8) * 0.08; });
+  return <group position={position} rotation={[0, rotation, 0]} scale={1.1}>
+    <mesh position={[0, 1, 0]} scale={[0.65, 0.65, 1.1]} castShadow><sphereGeometry args={[1, 10, 8]} /><meshLambertMaterial color="#f3e7cb" flatShading /></mesh>
+    {[-0.4, 0.4].flatMap((x) => [-0.7, 0.6].map((z) => <mesh key={`${x}-${z}`} position={[x, 0.4, z]}><boxGeometry args={[0.2, 0.8, 0.22]} /><meshLambertMaterial color="#cbbd9d" /></mesh>))}
+    <group ref={head} position={[0, 1.4, 0.9]}>
+      <mesh scale={[0.45, 0.6, 0.45]}><sphereGeometry args={[1, 8, 6]} /><meshLambertMaterial color="#fff7e8" flatShading /></mesh>
+      <mesh position={[0, -0.15, 0.36]} scale={[0.3, 0.22, 0.2]}><sphereGeometry args={[1, 8, 6]} /><meshLambertMaterial color="#cfb594" /></mesh>
+      {[-1, 1].map((side) => <group key={side}>
+        <mesh position={[side * 0.22, 0.64, -0.08]} rotation={[0.2, 0, side * -0.2]}><coneGeometry args={[0.12, 0.65, 6]} /><meshLambertMaterial color="#9a8467" /></mesh>
+        <mesh position={[side * 0.42, 0.15, 0.1]} rotation={[0, 0, side * 0.6]}><boxGeometry args={[0.4, 0.17, 0.22]} /><meshLambertMaterial color="#f3e7cb" /></mesh>
+        <mesh position={[side * 0.25, 0.12, 0.4]}><sphereGeometry args={[0.065, 6, 4]} /><meshBasicMaterial color={INK} /></mesh>
+      </group>)}
+      <mesh position={[0, -0.5, 0.2]} rotation={[Math.PI, 0, 0]}><coneGeometry args={[0.13, 0.35, 5]} /><meshLambertMaterial color="#fff7e8" /></mesh>
+    </group>
+  </group>;
+}
+
+function CharacterSign({ name, position }: { name: string; position: [number, number, number] }) {
+  const texture = useTexture(art(name));
+  useEffect(() => { texture.colorSpace = THREE.SRGBColorSpace; texture.needsUpdate = true; }, [texture]);
+  return <group position={position}>
+    <mesh position={[0, 1, 0]}><boxGeometry args={[0.18, 2, 0.18]} /><meshLambertMaterial color="#a88057" /></mesh>
+    <Billboard position={[0, 3.1, 0]}><mesh><planeGeometry args={[4.4, 4.4]} /><meshBasicMaterial map={texture} transparent alphaTest={0.1} side={THREE.DoubleSide} /></mesh></Billboard>
+  </group>;
+}
+
+export function CheckpointGates() {
+  const checkpoint = useGame((state) => state.telemetry.checkpoint);
+  const { theme, id } = currentMap;
+  const gateColor = (index: number, active: boolean) => index === 0 ? (id === 'jungle' ? '#d97d73' : '#f7d674') : active ? theme.accent : (id === 'jungle' ? '#86b960' : '#b8c7a0');
+  return <group>{CHECKPOINTS.map(({ point, yaw }, index) => {
+    const active = index === (checkpoint + 1) % 8;
+    return <group key={index} position={point} rotation={[0, yaw, 0]}>
+      {[-8.1, 8.1].map((x) => <group key={x} position={[x, 0, 0]}>
+        <mesh position={[0, 2.7, 0]} castShadow><boxGeometry args={[0.55, 5.4, 0.7]} /><meshLambertMaterial color={gateColor(index, active)} /></mesh>
+        {[1.4, 3.6].map((y) => <mesh key={y} position={[0, y, 0.02]}><boxGeometry args={[0.58, 0.65, 0.73]} /><meshLambertMaterial color="#fff7e8" /></mesh>)}
+      </group>)}
+      <mesh position={[0, 5.4, 0]} castShadow><boxGeometry args={[16.7, 0.75, 0.7]} /><meshLambertMaterial color={gateColor(index, active)} /></mesh>
+      {index === 0 && Array.from({ length: 16 }, (_, i) => <mesh key={i} position={[-7.4 + i * 0.99, 5.42, 0.37]}><planeGeometry args={[0.95, 0.55]} /><meshBasicMaterial color={i % 2 ? theme.paper : theme.ink} side={THREE.DoubleSide} /></mesh>)}
+    </group>;
+  })}</group>;
+}
+
+export const TrackSurface = memo(() => {
+  const { theme, id } = currentMap;
+  const jungle = id === 'jungle';
+  const road = useMemo(() => ribbonGeometry(ROAD_WIDTH), []);
+  const shoulder = useMemo(() => ribbonGeometry(17, 0, -0.09), []);
+  const leftLine = useMemo(() => ribbonGeometry(0.24, -6.6, 0.035), []);
+  const rightLine = useMemo(() => ribbonGeometry(0.24, 6.6, 0.035), []);
+  const marks = useMemo(() => TRACK_POINTS.filter((_, i) => i % 4 === 0).map(({ point, yaw }) => ({ position: [point.x, point.y + 0.025, point.z] as [number, number, number], scale: [0.24, 0.025, 2.8] as [number, number, number], rotation: yaw })), []);
+  const bridgePlanks = useMemo(() => BRIDGE_DECK_SEGMENTS.map(({ position, yaw, halfExtents }) => ({ position, rotation: yaw, scale: halfExtents.map((value) => value * 2) as [number, number, number] })), []);
+  const bridgeWalls = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'bridge').map(({ position, yaw, halfExtents }) => ({ position, rotation: yaw, scale: halfExtents.map((value) => value * 2) as [number, number, number] })), []);
+  const bridgeCaps = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'bridge').map(({ position, yaw, halfExtents }) => ({ position: [position[0], position[1] + halfExtents[1] + 0.06, position[2]] as [number, number, number], rotation: yaw, scale: [0.72, 0.12, halfExtents[2] * 2] as [number, number, number] })), []);
+  const roadsideWalls = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'roadside').map(({ position, yaw, halfExtents }) => ({ position, rotation: yaw, scale: halfExtents.map((value) => value * 2) as [number, number, number] })), []);
+  const roadsideStripes = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'roadside').map(({ position, yaw, halfExtents }) => ({ position: [position[0], position[1] + 0.1, position[2]] as [number, number, number], rotation: yaw, scale: [0.72, 0.28, halfExtents[2] * 2 + 0.05] as [number, number, number] })), []);
+  return <>
+    <mesh geometry={shoulder} receiveShadow><meshLambertMaterial color={jungle ? '#8b9967' : '#d5c29b'} /></mesh>
+    <RigidBody type="fixed" colliders="trimesh" friction={0.8}><mesh geometry={road} receiveShadow><meshLambertMaterial color={theme.road} side={THREE.DoubleSide} /></mesh></RigidBody>
+    <mesh geometry={leftLine}><meshBasicMaterial color="#f7edcf" /></mesh><mesh geometry={rightLine}><meshBasicMaterial color="#f7edcf" /></mesh>
+    <Instances points={marks} kind="box" color={jungle ? '#d6e8a7' : '#f4d477'} />
+    <Instances points={bridgePlanks} kind="box" color={jungle ? '#8b9564' : '#b98e60'} />
+    <Instances points={bridgeWalls} kind="box" color={jungle ? '#287451' : '#a67d53'} />
+    <Instances points={bridgeCaps} kind="box" color={jungle ? '#d6e8a7' : '#f5e7c5'} />
+    <Instances points={BRIDGE_SUPPORTS} kind="box" color={jungle ? '#456b51' : '#99724d'} />
+    <Instances points={roadsideWalls} kind="box" color={theme.accent} colors={[theme.accent, theme.paper]} />
+    <Instances points={roadsideStripes} kind="box" color={theme.paper} colors={[theme.paper, theme.accent]} />
+    <RigidBody type="fixed" colliders={false} name="bridge-decks">
+      {BRIDGE_DECK_SEGMENTS.map(({ id, position, yaw, halfExtents }) => <CuboidCollider key={id} position={position} rotation={[0, yaw, 0]} args={halfExtents} friction={0.8} restitution={0} />)}
+    </RigidBody>
+    <RigidBody type="fixed" colliders={false} name="barriers">
+      {TRACK_BARRIERS.map(({ id, position, yaw, halfExtents }) => <CuboidCollider key={id} position={position} rotation={[0, yaw, 0]} args={halfExtents} friction={0.2} restitution={0} />)}
+    </RigidBody>
+    {Array.from({ length: 16 }, (_, index) => <mesh key={index} position={START_MARK(index)} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[0.9, 0.9]} /><meshBasicMaterial color={index % 2 ? theme.paper : theme.ink} /></mesh>)}
+  </>;
+});
+function START_MARK(index: number): [number, number, number] { const frame = trackFrame(0); const p = frame.point.clone().addScaledVector(frame.right, (index - 7.5) * 0.86); return [p.x, p.y + 0.045, p.z]; }
+
+function GarageBuilding() {
+  return <group position={[-24, 0, 146]} rotation={[0, Math.PI, 0]}>
+    <mesh position={[0, 3, 0]} castShadow receiveShadow><boxGeometry args={[15, 6, 10]} /><meshLambertMaterial color="#f0dcb7" /></mesh>
+    <mesh position={[0, 6.3, 0]} castShadow><boxGeometry args={[16.5, 0.8, 11]} /><meshLambertMaterial color="#e98254" /></mesh>
+    <mesh position={[0, 2.7, 5.04]}><planeGeometry args={[9, 5.4]} /><meshLambertMaterial color="#486959" /></mesh>
+    {Array.from({ length: 6 }, (_, i) => <mesh key={i} position={[0, 0.6 + i * 0.8, 5.09]}><boxGeometry args={[9, 0.08, 0.12]} /><meshLambertMaterial color="#6e8b75" /></mesh>)}
+    <mesh position={[5.8, 3.4, 5.1]}><planeGeometry args={[1.6, 1.8]} /><meshLambertMaterial color="#a7d2cd" /></mesh>
+    <mesh position={[0, 6.9, 0]}><boxGeometry args={[7, 0.6, 3]} /><meshLambertMaterial color="#f7d674" /></mesh>
+  </group>;
+}
+
+export function JumpRamp() {
+  const geometry = useMemo(jumpRampGeometry, []);
+  return <group>
+    <RigidBody type="fixed" colliders="trimesh"><mesh geometry={geometry} castShadow><meshLambertMaterial color={currentMap.theme.accent} side={THREE.DoubleSide} flatShading /></mesh></RigidBody>
+    {JUMP_STRIPES.map(({ position, yaw, slope }, i) => <group key={i} position={position} rotation={[0, yaw, 0]}><mesh rotation={[-Math.PI / 2 - slope, 0, 0]}><planeGeometry args={[BOOST_JUMP.width - 0.5, 0.4]} /><meshBasicMaterial color={currentMap.id === 'jungle' ? currentMap.theme.ink : '#f7d674'} side={THREE.DoubleSide} /></mesh></group>)}
+  </group>;
+}
+
+export default memo(function World({ low }: { low: boolean }) {
+  const rocks = useMemo(() => {
+    const random = seededRandom(418); const points = [];
+    for (let i = 0; i < 100; i++) { const x = (random() - 0.5) * 570; const z = (random() - 0.5) * 490; const s = 1 + random() * 3; if (Math.abs(z) > 32 && nearestTrackPoint(x, z).distance > 16) points.push({ position: [x, s * 0.3, z] as [number, number, number], scale: [s, s * 0.65, s * 0.8] as [number, number, number], rotation: random() * Math.PI }); }
+    return points;
+  }, []);
+  return <>
+    <RigidBody type="fixed" colliders={false}>
+      <CuboidCollider position={[0, -1, -236]} args={[480, 1, 212]} friction={0.9} /><CuboidCollider position={[0, -1, 236]} args={[480, 1, 212]} friction={0.9} />
+      <CuboidCollider position={[0, -6, 0]} args={[480, 1, 480]} />
+    </RigidBody>
+    {[-1, 1].map((side) => <mesh key={side} position={[0, -0.035, side * 236]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[960, 424]} /><meshLambertMaterial color={side > 0 ? '#b3cc92' : '#a5c18d'} /></mesh>)}
+    <Mountains /><Forest low={low} /><Instances points={rocks} kind="rock" color="#9eb29e" />
+    <River /><TrackSurface /><CheckpointGates /><GarageBuilding /><JumpRamp />
+    <Goat position={[72, 0, 147]} rotation={-1} /><Goat position={[-81, 0, -139]} rotation={1.8} />
+    <Eagle /><Eagle offset={2.5} />
+    <CharacterSign name="wild-haired-driver" position={[14, 0, 139]} /><CharacterSign name="crying-driver" position={[-150, 0, 48]} />
+    <mesh position={[-220, 155, -200]}><sphereGeometry args={[20, 16, 12]} /><meshBasicMaterial color="#f7dc8a" /></mesh>
+    {[-1, 1].flatMap((side) => [0, 1, 2].map((i) => <group key={`${side}-${i}`} position={[side * (90 + i * 70), 64 + i * 8, -180 + i * 62]}>{[-1, 0, 1].map((x) => <mesh key={x} position={[x * 7, x === 0 ? 2 : 0, 0]} scale={[12, 5 + (x === 0 ? 2 : 0), 7]}><sphereGeometry args={[1, 10, 6]} /><meshLambertMaterial color="#fff8e6" flatShading /></mesh>)}</group>))}
+  </>;
+});

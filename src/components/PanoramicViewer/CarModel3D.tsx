@@ -1,19 +1,12 @@
 import React, { useRef, useEffect, Suspense } from 'react';
 import { useGLTF, Html } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
 import { useCarStore } from '../../store/carStore';
 import { getCarById } from '../../config/carModels';
 import { EXCLUDED_MESH_PATTERNS } from './ColorPicker';
 import { F1_HOTSPOTS, HotspotData } from './Hotspots';
-
-// Get base URL for assets
-const BASE_URL = import.meta.env.BASE_URL || '/';
-
-// Preload models for faster switching
-useGLTF.preload(`${BASE_URL}models/mclaren-mcl38/f1_2024_mclaren_mcl38.glb`);
-useGLTF.preload(`${BASE_URL}models/mercedes-w14/f1_2023_mercedes_amg_w14_e_performance_s1.glb`);
 
 interface CarModel3DProps {
   carId: string;
@@ -27,47 +20,32 @@ const shouldExcludeMesh = (meshName: string): boolean => {
 };
 
 function CarModelInner({ carId, onHotspotClick }: CarModel3DProps) {
-  const groupRef = useRef<THREE.Group>(null);
   const carConfig = getCarById(carId);
-  const paintedMeshesRef = useRef<THREE.Mesh[]>([]);
-  const loadingAnimated = useRef(false);
-  
-  const { 
-    autoRotate,
-    demoMode,
-    setLoading,
-    selectedBodyColor,
-    activeHotspot,
-  } = useCarStore();
+  const setLoading = useCarStore((state) => state.setLoading);
+  const selectedBodyColor = useCarStore((state) => state.selectedBodyColor);
+  const activeHotspotId = useCarStore((state) => state.activeHotspot?.id);
+  const invalidate = useThree((state) => state.invalidate);
   
   // Load 3D model
-  const modelPath = carConfig?.modelPath || '';
-  const { scene } = useGLTF(modelPath, true);
+  if (!carConfig) {
+    throw new Error(`The selected vehicle (${carId}) is not available.`);
+  }
+
+  const modelPath = carConfig.modelPath;
+  const { scene } = useGLTF(modelPath, false, true);
   
-  // Fast loading animation after model loads
+  // A cached model may not produce a new progress event, so the model itself
+  // is the authoritative signal that the loading overlay can be dismissed.
   useEffect(() => {
-    if (!loadingAnimated.current && scene) {
-      loadingAnimated.current = true;
-      
-      // Quick animate from current progress to 100%
-      let progress = 0;
-      const animateProgress = () => {
-        progress += 10; // Faster increments
-        if (progress >= 100) {
-          setLoading(false, 100);
-        } else {
-          setLoading(true, progress);
-          requestAnimationFrame(animateProgress);
-        }
-      };
-      animateProgress();
-    }
+    const frame = requestAnimationFrame(() => setLoading(false, 100));
+    return () => cancelAnimationFrame(frame);
   }, [scene, setLoading]);
   
   // Clone and process the scene
-  const clonedScene = React.useMemo(() => {
+  const prepared = React.useMemo(() => {
     const clone = scene.clone();
-    paintedMeshesRef.current = [];
+    const materials = new Map<string, THREE.MeshStandardMaterial>();
+    const paintMaterials = new Set<THREE.MeshPhysicalMaterial>();
     
     // Calculate bounding box to auto-scale and position
     const box = new THREE.Box3().setFromObject(clone);
@@ -87,87 +65,71 @@ function CarModelInner({ carId, onHotspotClick }: CarModel3DProps) {
     // Center horizontally and position on ground (y = 0)
     clone.position.x = -newCenter.x;
     clone.position.z = -newCenter.z;
-    clone.position.y = -newMin.y + 0.1; // Lift slightly above ground
+    clone.position.y = -newMin.y; // Lift slightly above ground
     
-    // Process meshes and identify paintable surfaces
+    // One clone per shared material and paint role, rather than per mesh.
+    // Textures and geometry remain shared with the GLTF cache.
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        
-        const meshName = child.name || `mesh_${child.id}`;
-        
-        // Clone material so we can modify it independently
-        if (child.material instanceof THREE.MeshStandardMaterial) {
-          child.material = child.material.clone();
-          child.material.envMapIntensity = 2;
-          
-          // Check if this mesh should be color-changeable
-          // Only add meshes that are NOT excluded
-          if (!shouldExcludeMesh(meshName)) {
-            // Check if material has a color that looks like paint (not black, not chrome)
-            const color = child.material.color;
-            const isBlackish = color.r < 0.15 && color.g < 0.15 && color.b < 0.15;
-            
-            // Add colored meshes to paintable list
-            if (!isBlackish) {
-              paintedMeshesRef.current.push(child);
+        const prepareMaterial = (source: THREE.Material) => {
+          if (!(source instanceof THREE.MeshStandardMaterial)) return source;
+          const { r, g, b } = source.color;
+          const fallbackPaintable = !shouldExcludeMesh(child.name) && !(r < 0.15 && g < 0.15 && b < 0.15);
+          const paintable = source.userData.paintable ?? fallbackPaintable;
+          const key = `${source.uuid}:${paintable}`;
+          if (!materials.has(key)) {
+            let material: THREE.MeshStandardMaterial;
+            if (paintable) {
+              const paint = source instanceof THREE.MeshPhysicalMaterial
+                ? source.clone()
+                : new THREE.MeshPhysicalMaterial();
+              if (!(source instanceof THREE.MeshPhysicalMaterial)) {
+                THREE.MeshStandardMaterial.prototype.copy.call(paint, source);
+              }
+              paint.clearcoat = 1;
+              paint.clearcoatRoughness = 0.1;
+              paint.reflectivity = 1;
+              paintMaterials.add(paint);
+              material = paint;
+            } else {
+              material = source.clone();
             }
+            material.envMapIntensity = 2;
+            material.metalness = Math.max(material.metalness, 0.5);
+            material.roughness = Math.min(material.roughness, 0.5);
+            materials.set(key, material);
           }
-          
-          child.material.metalness = Math.max(child.material.metalness, 0.5);
-          child.material.roughness = Math.min(child.material.roughness, 0.5);
-          child.material.needsUpdate = true;
-        }
+          return materials.get(key)!;
+        };
+        child.material = Array.isArray(child.material)
+          ? child.material.map(prepareMaterial)
+          : prepareMaterial(child.material);
       }
     });
-    
-    return clone;
+
+    return { scene: clone, materials, paintMaterials };
   }, [scene]);
+
+  useEffect(() => () => {
+    prepared.materials.forEach((material) => material.dispose());
+  }, [prepared]);
   
   // Apply color changes when selectedBodyColor changes
   useEffect(() => {
-    paintedMeshesRef.current.forEach((mesh) => {
-      if (mesh.material instanceof THREE.MeshStandardMaterial) {
-        // Convert to MeshPhysicalMaterial for clearcoat support if needed
-        if (!(mesh.material instanceof THREE.MeshPhysicalMaterial)) {
-          const physicalMat = new THREE.MeshPhysicalMaterial();
-          physicalMat.copy(mesh.material as THREE.MeshStandardMaterial);
-          mesh.material = physicalMat;
-        }
-        
-        const material = mesh.material as THREE.MeshPhysicalMaterial;
-        
-        // Set the color
-        material.color.set(selectedBodyColor.hex);
-        
-        // Premium car paint properties
-        material.metalness = selectedBodyColor.metalness ?? 0.7;
-        material.roughness = selectedBodyColor.roughness ?? 0.15;
-        
-        // Clearcoat for that glossy car paint look
-        material.clearcoat = 1.0;
-        material.clearcoatRoughness = 0.1;
-        
-        // Enhanced reflectivity
-        material.envMapIntensity = 2.5;
-        material.reflectivity = 1;
-        
-        material.needsUpdate = true;
-      }
+    prepared.paintMaterials.forEach((material) => {
+      material.color.set(selectedBodyColor.hex);
+      material.metalness = selectedBodyColor.metalness ?? 0.7;
+      material.roughness = selectedBodyColor.roughness ?? 0.15;
+      material.envMapIntensity = 2.5;
     });
-  }, [selectedBodyColor]);
-  
-  // Auto-rotate animation - slower speed
-  useFrame((_, delta) => {
-    if (groupRef.current && (autoRotate || demoMode)) {
-      groupRef.current.rotation.y += delta * (demoMode ? 0.08 : 0.15);
-    }
-  });
+    invalidate();
+  }, [prepared, selectedBodyColor, invalidate]);
   
   return (
-    <group ref={groupRef} position={[0, 0, 0]}>
-      <primitive object={clonedScene} />
+    <group position={[0, 0, 0]}>
+      <primitive object={prepared.scene} dispose={null} />
       
       {/* Hotspots that move with the car */}
       {F1_HOTSPOTS.map((hotspot) => (
@@ -175,7 +137,7 @@ function CarModelInner({ carId, onHotspotClick }: CarModel3DProps) {
           key={hotspot.id}
           hotspot={hotspot}
           onClick={onHotspotClick}
-          isActive={activeHotspot?.id === hotspot.id}
+          isActive={activeHotspotId === hotspot.id}
         />
       ))}
     </group>
@@ -196,6 +158,8 @@ const HotspotMarkerInternal: React.FC<HotspotMarkerInternalProps> = ({ hotspot, 
     <group position={hotspot.position}>
       <Html center distanceFactor={8}>
         <motion.button
+          type="button"
+          aria-label={`Details about ${hotspot.title}`}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           whileHover={{ scale: 1.3 }}
@@ -282,10 +246,12 @@ const HotspotMarkerInternal: React.FC<HotspotMarkerInternalProps> = ({ hotspot, 
 // Loading fallback component
 function LoadingFallback() {
   const meshRef = useRef<THREE.Mesh>(null);
+  const invalidate = useThree((state) => state.invalidate);
   
   useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 2;
+      invalidate();
     }
   });
   

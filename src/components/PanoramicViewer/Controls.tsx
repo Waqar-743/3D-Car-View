@@ -1,17 +1,28 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useShallow } from 'zustand/react/shallow';
 import { useCarStore } from '../../store/carStore';
 
 export const Controls: React.FC = () => {
   const { 
     autoRotate, 
     setAutoRotate, 
+    isInteracting,
     resetView,
     isFullscreen,
     setFullscreen,
     zoom,
     setZoom,
-  } = useCarStore();
+  } = useCarStore(useShallow((state) => ({
+    autoRotate: state.autoRotate,
+    setAutoRotate: state.setAutoRotate,
+    isInteracting: state.isInteracting,
+    resetView: state.resetView,
+    isFullscreen: state.isFullscreen,
+    setFullscreen: state.setFullscreen,
+    zoom: state.zoom,
+    setZoom: state.setZoom,
+  })));
   
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -30,6 +41,7 @@ export const Controls: React.FC = () => {
     <div className="flex items-center gap-1 sm:gap-2">
       {/* Zoom Out - Hidden on mobile */}
       <motion.button
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={zoomOut}
@@ -50,6 +62,7 @@ export const Controls: React.FC = () => {
       
       {/* Zoom In - Hidden on mobile */}
       <motion.button
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={zoomIn}
@@ -68,9 +81,14 @@ export const Controls: React.FC = () => {
       
       {/* Auto Rotate */}
       <motion.button
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setAutoRotate(!autoRotate)}
+        aria-pressed={autoRotate}
+        aria-label={autoRotate
+          ? isInteracting ? 'Auto rotate paused during interaction' : 'Stop auto rotate'
+          : 'Start auto rotate'}
         className={`
           w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center
           transition-colors duration-200
@@ -79,7 +97,7 @@ export const Controls: React.FC = () => {
             : 'bg-charcoal-200/80 text-platinum-400 border border-charcoal-50 hover:bg-charcoal-100 hover:text-gold'
           }
         `}
-        title="Auto Rotate"
+        title={autoRotate ? 'Stop auto rotate' : 'Start auto rotate'}
       >
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -88,6 +106,7 @@ export const Controls: React.FC = () => {
       
       {/* Reset View */}
       <motion.button
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={resetView}
@@ -103,6 +122,7 @@ export const Controls: React.FC = () => {
       
       {/* Fullscreen */}
       <motion.button
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={toggleFullscreen}

@@ -1,9 +1,14 @@
 import React, { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useCarStore } from '../../store/carStore';
 
-export const Lighting: React.FC = () => {
+interface LightingProps {
+  shadows: boolean;
+  shadowMapSize: number;
+}
+
+export const Lighting: React.FC<LightingProps> = ({ shadows, shadowMapSize }) => {
   const keyLightRef = useRef<THREE.DirectionalLight>(null);
   const fillLightRef = useRef<THREE.DirectionalLight>(null);
   const spotLightRef = useRef<THREE.SpotLight>(null);
@@ -13,7 +18,14 @@ export const Lighting: React.FC = () => {
   const hemiRef = useRef<THREE.HemisphereLight>(null);
   const backLightRef = useRef<THREE.DirectionalLight>(null);
   
-  const { demoTransitionPhase, spotlightMode } = useCarStore();
+  const demoTransitionPhase = useCarStore((state) => state.demoTransitionPhase);
+  const spotlightMode = useCarStore((state) => state.spotlightMode);
+  const invalidate = useThree((state) => state.invalidate);
+  const intensity = demoTransitionPhase === 'dark' ? 0.2 : demoTransitionPhase === 'revealing' ? 1.5 : 1;
+  const transitionLights = [keyLightRef, fillLightRef, spotLightRef, ambientRef, hemiRef, backLightRef, sunSpotRef, sunSpot2Ref];
+  const targets = spotlightMode
+    ? [0.02, 0.01, 0.02, 0.03, 0.02, 0.01, 15, 10]
+    : [intensity * 2, intensity, intensity * 1.2, intensity * 0.7, 0.5, 0.8, 0, 0];
   
   // Create a target for the spotlight
   const spotTarget = useMemo(() => {
@@ -23,70 +35,22 @@ export const Lighting: React.FC = () => {
   }, []);
   
   // Animate light intensity during demo transition and spotlight mode
-  useFrame(() => {
-    // Spotlight mode: dark environment with sun rays from gate
-    if (spotlightMode) {
-      const speed = 0.05; // Faster transition
-      
-      // Dim all normal lights significantly
-      if (keyLightRef.current) {
-        keyLightRef.current.intensity += (0.02 - keyLightRef.current.intensity) * speed;
+  useFrame((_, delta) => {
+    const blend = 1 - Math.exp(-Math.min(delta, 0.1) * (spotlightMode ? 3 : 1.5));
+    let changing = false;
+    transitionLights.forEach((reference, index) => {
+      const light = reference.current;
+      if (!light) return;
+      const difference = targets[index] - light.intensity;
+      if (Math.abs(difference) < 0.005) {
+        light.intensity = targets[index];
+      } else {
+        light.intensity += difference * blend;
+        changing = true;
       }
-      if (fillLightRef.current) {
-        fillLightRef.current.intensity += (0.01 - fillLightRef.current.intensity) * speed;
-      }
-      if (spotLightRef.current) {
-        spotLightRef.current.intensity += (0.02 - spotLightRef.current.intensity) * speed;
-      }
-      if (ambientRef.current) {
-        ambientRef.current.intensity += (0.03 - ambientRef.current.intensity) * speed;
-      }
-      if (hemiRef.current) {
-        hemiRef.current.intensity += (0.02 - hemiRef.current.intensity) * speed;
-      }
-      if (backLightRef.current) {
-        backLightRef.current.intensity += (0.01 - backLightRef.current.intensity) * speed;
-      }
-      // Bright yellow spotlight from the front wall/gate
-      if (sunSpotRef.current) {
-        sunSpotRef.current.intensity += (15 - sunSpotRef.current.intensity) * speed;
-      }
-      if (sunSpot2Ref.current) {
-        sunSpot2Ref.current.intensity += (10 - sunSpot2Ref.current.intensity) * speed;
-      }
-      return;
-    }
-    
-    // Normal mode or demo transition
-    const targetIntensity = demoTransitionPhase === 'dark' ? 0.2 : 
-                           demoTransitionPhase === 'revealing' ? 1.5 : 1;
-    const speed = 0.02;
-    
-    if (keyLightRef.current) {
-      keyLightRef.current.intensity += (targetIntensity * 2 - keyLightRef.current.intensity) * speed;
-    }
-    if (fillLightRef.current) {
-      fillLightRef.current.intensity += (targetIntensity - fillLightRef.current.intensity) * speed;
-    }
-    if (spotLightRef.current) {
-      spotLightRef.current.intensity += (targetIntensity * 1.2 - spotLightRef.current.intensity) * speed;
-    }
-    if (ambientRef.current) {
-      ambientRef.current.intensity += (targetIntensity * 0.7 - ambientRef.current.intensity) * speed;
-    }
-    if (hemiRef.current) {
-      hemiRef.current.intensity += (0.5 - hemiRef.current.intensity) * speed;
-    }
-    if (backLightRef.current) {
-      backLightRef.current.intensity += (0.8 - backLightRef.current.intensity) * speed;
-    }
-    // Turn off sun spotlight in normal mode
-    if (sunSpotRef.current) {
-      sunSpotRef.current.intensity += (0 - sunSpotRef.current.intensity) * speed;
-    }
-    if (sunSpot2Ref.current) {
-      sunSpot2Ref.current.intensity += (0 - sunSpot2Ref.current.intensity) * speed;
-    }
+    });
+    // Demand rendering settles completely once the light transition ends.
+    if (changing) invalidate();
   });
   
   return (
@@ -96,8 +60,8 @@ export const Lighting: React.FC = () => {
         ref={keyLightRef}
         position={[5, 10, 7]}
         intensity={2}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
+        castShadow={shadows && !spotlightMode}
+        shadow-mapSize={[shadowMapSize, shadowMapSize]}
         shadow-camera-far={30}
         shadow-camera-left={-8}
         shadow-camera-right={8}
@@ -138,8 +102,7 @@ export const Lighting: React.FC = () => {
         angle={0.4}
         penumbra={1}
         intensity={1.2}
-        castShadow
-        shadow-mapSize={[512, 512]}
+        castShadow={false}
       />
       
       {/* Spotlight target */}
@@ -154,8 +117,8 @@ export const Lighting: React.FC = () => {
         penumbra={0.8}
         intensity={0}
         color="#FFD700"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
+        castShadow={shadows && spotlightMode}
+        shadow-mapSize={[shadowMapSize, shadowMapSize]}
         shadow-camera-far={30}
         distance={40}
         decay={0.8}

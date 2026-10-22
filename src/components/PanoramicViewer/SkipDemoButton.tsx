@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCarStore } from '../../store/carStore';
 
 export const SkipDemoButton: React.FC = () => {
-  const { demoMode, setDemoMode } = useCarStore();
+  const demoMode = useCarStore((state) => state.demoMode);
+  const setDemoMode = useCarStore((state) => state.setDemoMode);
   
   const handleSkip = () => {
     setDemoMode(false);

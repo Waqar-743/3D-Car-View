@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useShallow } from 'zustand/react/shallow';
+import { useGLTF } from '@react-three/drei';
 import PanoramicCanvas from './PanoramicCanvas';
 import CarSelector from './CarSelector';
 import Controls from './Controls';
@@ -9,7 +11,8 @@ import { ColorPicker } from './ColorPicker';
 import DemoButton from './DemoButton';
 import SkipDemoButton from './SkipDemoButton';
 import { useCarStore } from '../../store/carStore';
-import { getCarById } from '../../config/carModels';
+import { getAllCars, getCarById } from '../../config/carModels';
+import ViewerErrorBoundary from './ViewerErrorBoundary';
 
 interface PanoramicViewerProps {
   initialCar?: string;
@@ -22,6 +25,7 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
 }) => {
   // Check if mobile for simpler animations
   const [isMobile, setIsMobile] = useState(false);
+  const [viewerRetryKey, setViewerRetryKey] = useState(0);
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -35,6 +39,7 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
     setSelectedCar,
     isLoading,
     setLoading,
+    setLoadError,
     activeHotspot,
     setActiveHotspot,
     selectedBodyColor,
@@ -48,9 +53,46 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
     demoTransitionPhase,
     setDemoTransitionPhase,
     spotlightMode,
-  } = useCarStore();
+  } = useCarStore(useShallow((state) => ({
+    selectedCarId: state.selectedCarId,
+    setSelectedCar: state.setSelectedCar,
+    isLoading: state.isLoading,
+    setLoading: state.setLoading,
+    setLoadError: state.setLoadError,
+    activeHotspot: state.activeHotspot,
+    setActiveHotspot: state.setActiveHotspot,
+    selectedBodyColor: state.selectedBodyColor,
+    setBodyColor: state.setBodyColor,
+    colorPickerOpen: state.colorPickerOpen,
+    toggleColorPicker: state.toggleColorPicker,
+    demoMode: state.demoMode,
+    setDemoMode: state.setDemoMode,
+    demoAutoStarted: state.demoAutoStarted,
+    setDemoAutoStarted: state.setDemoAutoStarted,
+    demoTransitionPhase: state.demoTransitionPhase,
+    setDemoTransitionPhase: state.setDemoTransitionPhase,
+    spotlightMode: state.spotlightMode,
+  })));
   
   const carConfig = getCarById(selectedCarId);
+
+  const handleViewerError = useCallback((error: Error) => {
+    console.error('3D viewer failed:', error);
+    setLoadError(error.message || 'The 3D viewer could not be loaded.');
+  }, [setLoadError]);
+
+  const handleRetry = useCallback(() => {
+    if (carConfig?.modelPath) useGLTF.clear(carConfig.modelPath);
+    setLoadError(null);
+    setLoading(true, 0);
+    setViewerRetryKey((key) => key + 1);
+  }, [carConfig?.modelPath, setLoadError, setLoading]);
+
+  const handleLoadDefault = useCallback(() => {
+    setLoadError(null);
+    setSelectedCar('mclaren-mcl38');
+    setViewerRetryKey((key) => key + 1);
+  }, [setLoadError, setSelectedCar]);
   
   // Handle demo toggle with dark-to-light transition
   const handleDemoToggle = () => {
@@ -92,7 +134,9 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
   
   // Set initial car
   useEffect(() => {
-    setSelectedCar(initialCar);
+    const requestedCar = getCarById(initialCar);
+    const initialSelection = requestedCar?.active ? requestedCar.id : getAllCars()[0]?.id;
+    if (initialSelection) setSelectedCar(initialSelection);
     setLoading(true, 0);
   }, [initialCar, setSelectedCar, setLoading]);
   
@@ -169,13 +213,22 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
   }, [demoMode, setDemoMode]);
   
   return (
-    <div className="relative w-full h-screen bg-charcoal overflow-hidden">
+    <div className="relative h-dvh w-full bg-charcoal overflow-clip">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-charcoal via-charcoal-200 to-charcoal z-0" />
       
       {/* 3D Canvas - Full screen */}
       <div className="absolute inset-0 z-10">
-        <PanoramicCanvas onHotspotClick={handleHotspotClick} />
+        <ViewerErrorBoundary
+          key={viewerRetryKey}
+          resetKey={`${selectedCarId}-${viewerRetryKey}`}
+          onError={handleViewerError}
+        >
+          <PanoramicCanvas
+            onHotspotClick={handleHotspotClick}
+            onError={handleViewerError}
+          />
+        </ViewerErrorBoundary>
       </div>
       
       {/* Demo Transition Overlay - Dark to Light (simplified on mobile) */}
@@ -286,7 +339,10 @@ export const PanoramicViewer: React.FC<PanoramicViewerProps> = ({
       <SkipDemoButton />
       
       {/* Loading Overlay */}
-      <LoadingOverlay />
+      <LoadingOverlay
+        onRetry={handleRetry}
+        onLoadDefault={selectedCarId === 'mclaren-mcl38' ? undefined : handleLoadDefault}
+      />
       
       {/* Header - Floating - Compact on mobile */}
       <motion.header
