@@ -1,0 +1,267 @@
+{
+  "name": "Windway cartoon pack",
+  "version": "1.0.0",
+  "viewBox": "0 0 256 256",
+  "palette": {
+    "ink": "#253b39",
+    "cream": "#fff7e8",
+    "orange": "#e98254",
+    "gold": "#f7d674",
+    "sage": "#9aba97",
+    "river": "#70b9c7"
+  },
+  "assets": [
+    {
+      "id": "wild-haired-driver",
+      "name": "Wild-haired driver",
+      "category": "Characters",
+      "description": "A mischievous roadside character with windblown hair, goggles and a huge grin.",
+      "file": "wild-haired-driver.svg"
+    },
+    {
+      "id": "crying-driver",
+      "name": "Crying driver",
+      "category": "Characters",
+      "description": "An expressive, teary racer with a soft helmet, crumpled eyebrows and oversized tears.",
+      "file": "crying-driver.svg"
+    },
+    {
+      "id": "eagle-soaring",
+      "name": "Soaring eagle",
+      "category": "Characters",
+      "description": "A broad-winged eagle with layered feathers, a white head and golden beak.",
+      "file": "eagle-soaring.svg"
+    },
+    {
+      "id": "eagle-perched",
+      "name": "Lookout eagle",
+      "category": "Characters",
+      "description": "A watchful eagle perched on a weathered wooden trail sign.",
+      "file": "eagle-perched.svg"
+    },
+    {
+      "id": "mountain-goat",
+      "name": "Mountain goat",
+      "category": "Characters",
+      "description": "A cheerful alpine goat with curved horns, a little beard and sturdy hooves.",
+      "file": "mountain-goat.svg"
+    },
+    {
+      "id": "river-bend",
+      "name": "Winding river",
+      "category": "Nature",
+      "description": "A ribbon of turquoise river curving between grassy banks and smooth pebbles.",
+      "file": "river-bend.svg"
+    },
+    {
+      "id": "waterfall",
+      "name": "Waterfall",
+      "category": "Nature",
+      "description": "A small waterfall pouring over stepped rock into a foamy pool.",
+      "file": "waterfall.svg"
+    },
+    {
+      "id": "pine-tree",
+      "name": "Alpine pine",
+      "category": "Nature",
+      "description": "A layered evergreen tree with a warm trunk and chunky rounded branches.",
+      "file": "pine-tree.svg"
+    },
+    {
+      "id": "oak-tree",
+      "name": "Round oak",
+      "category": "Nature",
+      "description": "A broad-canopied cartoon oak with soft clustered leaves and a forked trunk.",
+      "file": "oak-tree.svg"
+    },
+    {
+      "id": "mountain-range",
+      "name": "Mountain range",
+      "category": "Nature",
+      "description": "Three overlapping alpine peaks with snow caps and soft forest-green foothills.",
+      "file": "mountain-range.svg"
+    },
+    {
+      "id": "clouds",
+      "name": "Cloud cluster",
+      "category": "Nature",
+      "description": "Two puffy clouds with rounded contours and a small trailing puff.",
+      "file": "clouds.svg"
+    },
+    {
+      "id": "sun",
+      "name": "Sunny side",
+      "category": "Nature",
+      "description": "A friendly warm sun with alternating rays and a contented face.",
+      "file": "sun.svg"
+    },
+    {
+      "id": "rock-cluster",
+      "name": "Trail rocks",
+      "category": "Nature",
+      "description": "A cluster of faceted boulders with a small patch of grass.",
+      "file": "rock-cluster.svg"
+    },
+    {
+      "id": "berry-bush",
+      "name": "Berry bush",
+      "category": "Nature",
+      "description": "A rounded roadside shrub with warm berries and tiny leaf highlights.",
+      "file": "berry-bush.svg"
+    },
+    {
+      "id": "terrain-tile",
+      "name": "Meadow terrain",
+      "category": "Nature",
+      "description": "An isometric grassy ground tile with an exposed earth edge and little tufts.",
+      "file": "terrain-tile.svg"
+    },
+    {
+      "id": "curved-road",
+      "name": "Country road",
+      "category": "Track & props",
+      "description": "A sweeping asphalt bend with cream edge lines and dashed center markings.",
+      "file": "curved-road.svg"
+    },
+    {
+      "id": "wooden-bridge",
+      "name": "River bridge",
+      "category": "Track & props",
+      "description": "A sturdy little timber bridge with perspective deck planks and warm wooden railings.",
+      "file": "wooden-bridge.svg"
+    },
+    {
+      "id": "jump-ramp",
+      "name": "Jump ramp",
+      "category": "Track & props",
+      "description": "An orange-sided stunt ramp with a striped approach and curved launch surface.",
+      "file": "jump-ramp.svg"
+    },
+    {
+      "id": "garage",
+      "name": "Pit-stop garage",
+      "category": "Track & props",
+      "description": "A compact cartoon garage with a checkered fascia, roller door and small side window.",
+      "file": "garage.svg"
+    },
+    {
+      "id": "safety-barrier",
+      "name": "Safety barrier",
+      "category": "Track & props",
+      "description": "A chunky orange-and-cream road barrier with weighted feet.",
+      "file": "safety-barrier.svg"
+    },
+    {
+      "id": "traffic-cones",
+      "name": "Traffic cones",
+      "category": "Track & props",
+      "description": "Two rounded road cones with broad reflective bands and heavy bases.",
+      "file": "traffic-cones.svg"
+    },
+    {
+      "id": "checkpoint",
+      "name": "Checkpoint gate",
+      "category": "Track & props",
+      "description": "A playful checkpoint arch with chevron markers and striped uprights.",
+      "file": "checkpoint.svg"
+    },
+    {
+      "id": "finish-flag",
+      "name": "Finish flag",
+      "category": "Track & props",
+      "description": "A waving checkered race flag on a warm wooden pole.",
+      "file": "finish-flag.svg"
+    },
+    {
+      "id": "rally-buggy",
+      "name": "Trail buggy",
+      "category": "Vehicles",
+      "description": "A friendly orange off-road buggy with chunky tires, round lamps and an open cabin.",
+      "file": "rally-buggy.svg"
+    },
+    {
+      "id": "formula-racer",
+      "name": "Pocket racer",
+      "category": "Vehicles",
+      "description": "A compact stylized open-wheel racing car in papaya orange, viewed from above.",
+      "file": "formula-racer.svg"
+    },
+    {
+      "id": "racing-wheel",
+      "name": "Racing wheel",
+      "category": "Vehicles",
+      "description": "A chunky tire with five cream spokes and a golden center hub.",
+      "file": "racing-wheel.svg"
+    },
+    {
+      "id": "speedometer",
+      "name": "Speedometer",
+      "category": "Driving UI",
+      "description": "A readable analog speed dial with color segments and an orange needle.",
+      "file": "speedometer.svg"
+    },
+    {
+      "id": "track-minimap",
+      "name": "Track minimap",
+      "category": "Driving UI",
+      "description": "A compact circuit map with a checkered start marker and a small orange car pointer.",
+      "file": "track-minimap.svg"
+    },
+    {
+      "id": "steering-wheel",
+      "name": "Steering control",
+      "category": "Driving UI",
+      "description": "A thick-rimmed three-spoke steering wheel with a warm center badge.",
+      "file": "steering-wheel.svg"
+    },
+    {
+      "id": "pedal-controls",
+      "name": "Brake & throttle",
+      "category": "Driving UI",
+      "description": "Two separate foot pedals with rounded plates and grippy horizontal grooves.",
+      "file": "pedal-controls.svg"
+    },
+    {
+      "id": "pause-button",
+      "name": "Pause",
+      "category": "Driving UI",
+      "description": "A soft square pause control with two cream bars.",
+      "file": "pause-button.svg"
+    },
+    {
+      "id": "camera-button",
+      "name": "Change camera",
+      "category": "Driving UI",
+      "description": "A chunky camera control with a turquoise lens and an orange shutter.",
+      "file": "camera-button.svg"
+    },
+    {
+      "id": "restart-button",
+      "name": "Restart",
+      "category": "Driving UI",
+      "description": "A circular reset arrow on a sage green rounded button.",
+      "file": "restart-button.svg"
+    },
+    {
+      "id": "winner-trophy",
+      "name": "Winner trophy",
+      "category": "Driving UI",
+      "description": "A golden cup with generous handles, a star and a wooden podium base.",
+      "file": "winner-trophy.svg"
+    },
+    {
+      "id": "vehicle-badge",
+      "name": "Vehicle badge",
+      "category": "Driving UI",
+      "description": "An original shield emblem with a little mountain and winding road.",
+      "file": "vehicle-badge.svg"
+    },
+    {
+      "id": "play-button",
+      "name": "Start driving",
+      "category": "Driving UI",
+      "description": "A cream play arrow on a warm orange rounded square.",
+      "file": "play-button.svg"
+    }
+  ]
+}

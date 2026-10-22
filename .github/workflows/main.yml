@@ -1,5 +1,5 @@
 # .github/workflows/main.yml
-name: Build and Deploy F1 Experience
+name: Build and Deploy Windway
 
 on:
   push:
@@ -8,6 +8,13 @@ on:
   pull_request:
     branches:
       - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windway-pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -28,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Build production
-        run: npm run build
+        run: npm run build -- --base "/${GITHUB_REPOSITORY#*/}/"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

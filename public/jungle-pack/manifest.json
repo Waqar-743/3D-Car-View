@@ -1,0 +1,192 @@
+{
+  "name": "Windway Jungle Pack",
+  "version": "1.0.0",
+  "viewBox": "0 0 256 256",
+  "palette": {
+    "ink": "#153c35",
+    "jade": "#287451",
+    "leaf": "#86b960",
+    "lime": "#d6e8a7",
+    "marigold": "#eac35a",
+    "coral": "#d97d73",
+    "mist": "#e9efda"
+  },
+  "notes": "Original editable SVG artwork. WAQAR, IMRAN and TATHEER are fictional character designs, not real-person likenesses.",
+  "assets": [
+    {
+      "id": "lion",
+      "name": "Lion",
+      "category": "Wildlife",
+      "description": "Golden grin. Jade mane. King of the roadside.",
+      "file": "lion.svg"
+    },
+    {
+      "id": "giraffe",
+      "name": "Giraffe",
+      "category": "Wildlife",
+      "description": "The canopy lookout, with leafy ears and jade spots.",
+      "file": "giraffe.svg"
+    },
+    {
+      "id": "deer",
+      "name": "Deer",
+      "category": "Wildlife",
+      "description": "A gentle forest friend with branching antlers.",
+      "file": "deer.svg"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "category": "Wildlife",
+      "description": "One very cheerful coil around a mossy branch.",
+      "file": "python.svg"
+    },
+    {
+      "id": "horse",
+      "name": "Horse",
+      "category": "Wildlife",
+      "description": "Coral coat, flowing mane, ready to gallop.",
+      "file": "horse.svg"
+    },
+    {
+      "id": "wolf",
+      "name": "Wolf",
+      "category": "Wildlife",
+      "description": "Curious eyes and a very impressive bushy tail.",
+      "file": "wolf.svg"
+    },
+    {
+      "id": "monkey",
+      "name": "Monkey",
+      "category": "Wildlife",
+      "description": "Mischief, a curling tail and one lucky leaf.",
+      "file": "monkey.svg"
+    },
+    {
+      "id": "toucan",
+      "name": "Toucan",
+      "category": "Wildlife",
+      "description": "A marigold bill that deserves its own postcode.",
+      "file": "toucan.svg"
+    },
+    {
+      "id": "elephant",
+      "name": "Elephant",
+      "category": "Wildlife",
+      "description": "Big leafy ears. Bigger jungle energy.",
+      "file": "elephant.svg"
+    },
+    {
+      "id": "waqar",
+      "name": "WAQAR",
+      "category": "Characters",
+      "description": "The guide. Tousled hair, golden goggles, endless good ideas.",
+      "file": "waqar.svg"
+    },
+    {
+      "id": "imran",
+      "name": "IMRAN",
+      "category": "Characters",
+      "description": "The scout. Field hat, round glasses, always finding the route.",
+      "file": "imran.svg"
+    },
+    {
+      "id": "tatheer",
+      "name": "TATHEER",
+      "category": "Characters",
+      "description": "The racer. Jade helmet, golden visor, fully in the zone.",
+      "file": "tatheer.svg"
+    },
+    {
+      "id": "broadleaf-tree",
+      "name": "Broadleaf tree",
+      "category": "Environment",
+      "description": "A layered canopy for a dense, shaded jungle.",
+      "file": "broadleaf-tree.svg"
+    },
+    {
+      "id": "palm-tree",
+      "name": "Palm tree",
+      "category": "Environment",
+      "description": "Arching fronds above the tiny patches of sunlit ground.",
+      "file": "palm-tree.svg"
+    },
+    {
+      "id": "fern",
+      "name": "Fern",
+      "category": "Environment",
+      "description": "Feathery ground cover for the forest floor.",
+      "file": "fern.svg"
+    },
+    {
+      "id": "vines",
+      "name": "Vines",
+      "category": "Environment",
+      "description": "Twisting jade growth for lush roadside framing.",
+      "file": "vines.svg"
+    },
+    {
+      "id": "river",
+      "name": "Jungle river",
+      "category": "Environment",
+      "description": "A cool winding ribbon beneath the thick canopy.",
+      "file": "river.svg"
+    },
+    {
+      "id": "stop-station",
+      "name": "Stop station",
+      "category": "Race kit",
+      "description": "A leafy roadside rest stop in marigold and jade.",
+      "file": "stop-station.svg"
+    },
+    {
+      "id": "lap-badge",
+      "name": "Lap badge",
+      "category": "Race kit",
+      "description": "Keep count of every wild loop through the jungle.",
+      "file": "lap-badge.svg"
+    },
+    {
+      "id": "finish-flag",
+      "name": "Finish flag",
+      "category": "Race kit",
+      "description": "The chequered finish, reimagined in jungle colours.",
+      "file": "finish-flag.svg"
+    },
+    {
+      "id": "track-minimap",
+      "name": "Track minimap",
+      "category": "Race kit",
+      "description": "A pocket-sized guide to the winding circuit.",
+      "file": "track-minimap.svg"
+    },
+    {
+      "id": "winner-trophy",
+      "name": "Winner trophy",
+      "category": "Race kit",
+      "description": "A golden reward for a properly wild finish.",
+      "file": "winner-trophy.svg"
+    },
+    {
+      "id": "checkpoint",
+      "name": "Checkpoint",
+      "category": "Race kit",
+      "description": "Bright jade-and-gold gates to guide the racing line.",
+      "file": "checkpoint.svg"
+    },
+    {
+      "id": "boost-ramp",
+      "name": "Boost ramp",
+      "category": "Race kit",
+      "description": "An on-road launch into a little jungle airtime.",
+      "file": "boost-ramp.svg"
+    },
+    {
+      "id": "jungle-badge",
+      "name": "Jungle badge",
+      "category": "Race kit",
+      "description": "The emblem of the new canopy circuit.",
+      "file": "jungle-badge.svg"
+    }
+  ]
+}
