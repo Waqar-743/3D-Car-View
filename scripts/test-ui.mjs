@@ -120,16 +120,16 @@ function assertImageFiles(html) {
 }
 
 // Let the lazy import resolve once before checking the stubbed scene output.
-prepare(GAME_MAPS[0], 'home'); render();
+prepare(GAME_MAPS[0], 'garage'); render();
 await new Promise((done) => setImmediate(done));
 
 for (const map of GAME_MAPS) {
   for (const page of ['home', 'map', 'garage', 'settings', 'howto', 'race', 'results']) {
     prepare(map, page);
     const html = render();
-    check(`${map.id} ${page}: screen and scene render`, () => {
+    check(`${map.id} ${page}: screen and intended viewport render`, () => {
       assert(html.includes(`map-${map.id} page-${page}`));
-      assert(html.includes('data-headless-scene="true"'));
+      assert.equal(html.includes('data-headless-scene="true"'), page !== 'home', 'Landing should not download the 3D viewport');
       assert(!html.includes('data-msg='), 'SSR unexpectedly fell back due to an error');
       assert(!html.includes('src=""'));
     });
@@ -148,7 +148,7 @@ for (const map of GAME_MAPS) {
     });
     if (page === 'home' || page === 'map') {
       check(`${map.id} ${page}: exactly one map selection is pressed`, () => {
-        const selector = html.match(/<fieldset class="map-selector[\s\S]*?<\/fieldset>/)?.[0];
+        const selector = page === 'home' ? html.match(/<fieldset>[\s\S]*?<\/fieldset>/)?.[0] : html.match(/<fieldset class="map-selector[\s\S]*?<\/fieldset>/)?.[0];
         assert(selector, 'No map selector');
         assert.equal((selector.match(/aria-pressed="true"/g) ?? []).length, 1);
         assert.equal((selector.match(/aria-pressed="false"/g) ?? []).length, GAME_MAPS.length - 1);
@@ -156,9 +156,16 @@ for (const map of GAME_MAPS) {
         assert(pressedButton?.includes(`<strong>${map.name}</strong>`));
       });
     }
-    if (page === 'home' || page === 'race') {
+    if (page === 'race') {
       check(`${map.id} ${page}: record uses the correct map namespace`, () => {
         assert(html.includes(formatTime(map.id === 'snow' ? 450.12 : map.id === 'jungle' ? 104.36 : 51.27)));
+      });
+    }
+    if (page === 'home') {
+      check(`${map.id} landing: all three stories, SVG art and creator footer stay together`, () => {
+        for (const road of GAME_MAPS) assert(html.includes(`id="road-${road.id}"`));
+        assert(html.includes('Waqar Ahmed') && html.includes('https://github.com/Waqar-743/WindWay'));
+        assert(html.includes('windway-landing') && !html.includes('scene-shell'));
       });
     }
     if (page === 'race') {

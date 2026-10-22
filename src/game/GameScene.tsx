@@ -14,6 +14,7 @@ import { START } from './track';
 import { vehicleFrame } from './runtime';
 import { getRenderQuality } from '../utils/renderQuality';
 import ViewerErrorBoundary from '../components/PanoramicViewer/ViewerErrorBoundary';
+import TrackLoader from './TrackLoader';
 
 function Sunlight({ shadows }: { shadows: boolean }) {
   const light = useRef<THREE.DirectionalLight>(null);
@@ -70,10 +71,12 @@ function ContextMonitor() {
 
 function SceneLoading() {
   const ready = useGame((state) => state.ready); const error = useGame((state) => state.error);
+  const page = useGame((state) => state.page), reducedMotion = useGame((state) => state.settings.reducedMotion);
   const selectedMap = useGame((state) => state.selectedMap); const map = mapById(selectedMap);
   const progress = useProgress((state) => state.progress);
-  if (ready || error) return null;
-  return <div className="scene-loading" role="status"><img src={`${import.meta.env.BASE_URL}${map.pack}/${map.id === 'snow' ? 'route-badge' : map.id === 'jungle' ? 'jungle-badge' : 'racing-wheel'}.svg`} alt="" /><span>Getting {map.region} ready</span><progress value={progress} max={100} aria-label={`Loading ${map.name}`} /></div>;
+  // The race has its own compact loader in the edge HUD; never cover its center.
+  if (ready || error || page === 'race') return null;
+  return <div className="scene-loadscreen"><TrackLoader label={`Getting ${map.region} ready`} progress={progress} reducedMotion={reducedMotion} /></div>;
 }
 
 export default function GameScene({ attempt }: { attempt: number }) {

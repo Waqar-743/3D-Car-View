@@ -1,0 +1,158 @@
+.track-loader {
+  --loader-ink: var(--ink, #253b39);
+  --loader-paper: var(--paper, #f8f3e8);
+  --loader-accent: var(--accent, #d47762);
+  display: grid;
+  gap: 10px;
+  inline-size: min(100%, 360px);
+  min-inline-size: 0;
+  color: var(--loader-ink);
+  text-align: start;
+  font: inherit;
+}
+
+.track-loader .track-loader-road {
+  position: relative;
+  block-size: 56px;
+  overflow: hidden;
+  isolation: isolate;
+  border-block-end: 2px solid currentColor;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--loader-ink) 5%, var(--loader-paper));
+}
+
+.track-loader .track-loader-road::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 2px;
+  block-size: 2px;
+  opacity: .28;
+  background: repeating-linear-gradient(90deg, currentColor 0 18px, transparent 18px 32px);
+}
+
+.track-loader .track-loader-car {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: windway-loader-drive 2.1s cubic-bezier(.3, .1, .55, .9) infinite;
+  will-change: transform;
+}
+
+.track-loader .track-loader-car img {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: 3px;
+  display: block;
+  inline-size: 96px;
+  block-size: 40px;
+  max-inline-size: none;
+  object-fit: contain;
+  user-select: none;
+}
+
+.track-loader .track-loader-finish {
+  position: absolute;
+  inset-inline-end: 10px;
+  inset-block-end: 1px;
+  inline-size: 10px;
+  block-size: 10px;
+  opacity: .4;
+  background: conic-gradient(currentColor 25%, transparent 0 50%, currentColor 0 75%, transparent 0) 0 0 / 5px 5px;
+}
+
+.track-loader .track-loader-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-inline-size: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.track-loader .track-loader-label {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.track-loader .track-loader-percent {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.track-loader .track-loader-progress {
+  display: block;
+  appearance: none;
+  inline-size: 100%;
+  block-size: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--loader-ink) 13%, var(--loader-paper));
+  accent-color: var(--loader-accent);
+}
+
+.track-loader .track-loader-progress::-webkit-progress-bar {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--loader-ink) 13%, var(--loader-paper));
+}
+
+.track-loader .track-loader-progress::-webkit-progress-value {
+  border-radius: 2px;
+  background: var(--loader-accent);
+}
+
+.track-loader .track-loader-progress::-moz-progress-bar {
+  border-radius: 2px;
+  background: var(--loader-accent);
+}
+
+.track-loader.track-loader--compact {
+  gap: 6px;
+  inline-size: 100%;
+}
+
+.track-loader.track-loader--compact .track-loader-road {
+  block-size: 38px;
+}
+
+.track-loader.track-loader--compact .track-loader-car img {
+  inline-size: 72px;
+  block-size: 30px;
+}
+
+.track-loader.track-loader--compact .track-loader-caption {
+  font-size: 11px;
+}
+
+.track-loader[data-reduced-motion='true'] .track-loader-car {
+  animation: none;
+  transform: translateX(calc(50% - 48px));
+  will-change: auto;
+}
+
+.track-loader.track-loader--compact[data-reduced-motion='true'] .track-loader-car {
+  transform: translateX(calc(50% - 36px));
+}
+
+@keyframes windway-loader-drive {
+  from { transform: translateX(-100px); }
+  to { transform: translateX(100%); }
+}
+
+.scene-loadscreen { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; background: var(--paper, #f7f3e7); color: var(--ink, #30483d); }
+.wildway .race-ui .track-loader { --loader-ink: var(--hud-text); --loader-paper: #213b4f; --loader-accent: var(--hud-accent); }
+.wildway .race-ui .track-loader-caption { font-size: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .track-loader .track-loader-car {
+    animation: none;
+    transform: translateX(calc(50% - 48px));
+    will-change: auto;
+  }
+  .track-loader.track-loader--compact .track-loader-car {
+    transform: translateX(calc(50% - 36px));
+  }
+}

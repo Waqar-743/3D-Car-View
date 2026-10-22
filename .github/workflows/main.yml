@@ -35,10 +35,13 @@ jobs:
         run: npm ci
 
       - name: Test driving, maps and interface
-        run: npm run test:game
+        run: npm run test:game && npm run test:site
 
       - name: Build production
         run: npm run build -- --base "/${GITHUB_REPOSITORY#*/}/"
+
+      - name: Verify deployed paths and assets
+        run: npm run test:build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

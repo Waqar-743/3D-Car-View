@@ -7,11 +7,15 @@ npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:4175/3D-Car-Design/. Direct map links use `?map=jungle` for Canopy Run and `?map=snow` for Frostbite Ascent. Port 4174 was the separate original SVG gallery, not the game. The dev server binds only to this computer and does not open or replace unrelated services.
+Open http://127.0.0.1:4175/WindWay/. Direct map links use `?map=jungle` to select Canopy Run and `?map=snow` to select Frostbite Ascent. The landing page presents all three maps together. Port 4174 was the separate original SVG gallery, not the game. The dev server binds only to this computer and does not open or replace unrelated services.
 
-The public game is at https://waqar-743.github.io/3D-Car-View/. GitHub already uses `3D-Car-View` as this repository's canonical name. CI passes that repository name as Vite's base path; local previews retain `/3D-Car-Design/`. The public brand is Windway. Lowercase `wildway` preference keys and some internal filenames are deliberately retained for compatibility with existing saves and links.
+The public website and game are at https://waqar-743.github.io/WindWay/. The repository was renamed to `WindWay`; the earlier live HTML still requested `/3D-Car-View/assets/`, causing the reported 404. Vite now defaults to `/WindWay/`, and CI also passes the repository name as its deployment base. Old local preview paths redirect to the canonical path while preserving the selected-map query. Public bookmarks must use the current URL. A branded 404 page provides a way back for missing addresses within the site. Lowercase `wildway` preference keys and some internal filenames remain compatible with existing saves.
 
 ## What is playable
+
+The website now opens with one illustrated, scrollable landing page: an introduction, all three map chapters, their local SVG cast, a garage introduction, driving notes, Waqar’s project story and the creator/repository footer. Selecting a road updates the chosen starting line; each chapter also has a direct Drive button. The 3D viewport, physics engine and car models are not mounted on the landing page and load only when entering the garage or game views.
+
+Loading uses an original side-profile F1-style car moving left to right, from the initial HTML boot screen to scene loading and the compact race HUD. Only actual asset progress gets a percentage; unknown progress remains indeterminate. Calmer motion and system reduced-motion preferences stop the animation. The boot screen offers a retry and canonical-site link if the entry script cannot load.
 
 - Two selectable circuits: the original one-lap alpine loop and the new two-lap **Canopy Run** in Jungle Reserve. Each map generates its road, bridge protection, ramp, checkpoint gates, safe respawns, and live minimap from one centerline.
 - A third, expert map: **Frostbite Ascent** in Whiteout Ridge. This is a 6.44 km one-way route climbing about 362 m, not a closed circuit. Fifteen intermediate checkpoints lead to the sixteenth gate and checkered finish at the summit. Snow-covered terrain, instanced firs and peaks, camera-following snowfall, a base-camp hut, snowman and arctic fox give it a separate winter identity.
@@ -47,9 +51,9 @@ All driving information now lives in a compact **right-edge dashboard**: timer, 
 
 Choose **Canopy Run** using the map selector on the start screen or under **The maps**. Its ramp uses marigold and jade instead of orange. The lap counter and race clock cover both laps, and a recovery preserves the current lap and earned checkpoint. Map changes are locked while a race is active. The roadside station is a physical scenery building with a lay-by; it does not promise repairs, fuel, or a shortcut through the course.
 
-The new editable SVG gallery is at `/3D-Car-Design/jungle-pack/index.html`, with animals (lion, giraffe, deer, python, horse, wolf, monkey, toucan, elephant), original named portraits, vegetation, river, station, and recoloured race-kit icons. No real person's likeness is inferred from a name.
+The editable SVG gallery is at `/WindWay/jungle-pack/index.html`, with animals (lion, giraffe, deer, python, horse, wolf, monkey, toucan, elephant), original named portraits, vegetation, river, station, and recoloured race-kit icons. No real person's likeness is inferred from a name.
 
-The winter gallery is at `/3D-Car-Design/snow-pack/index.html`: eighteen native, accessible SVGs with full-size previews, downloads, a manifest and a contact sheet. Its ice-blue/rescue-coral palette is also used in the start, map, garage, controls, settings, race and results views.
+The winter gallery is at `/WindWay/snow-pack/index.html`: eighteen native, accessible SVGs with full-size previews, downloads, a manifest and a contact sheet. Its ice-blue/rescue-coral palette is also used in the start, map, garage, controls, settings, race and results views.
 
 The ramp is on the opening straight, 12 metres long and 8 metres wide, leaving a bypass lane on each side. Forward entry adds 9 m/s (about 32 km/h) with a minimum boosted speed of 30 m/s, permits a temporary higher speed limit for 1.5 seconds, then tapers back to the car's ordinary limit. Launch is limited to forward crossings of the ramp lip; reversing, bypassing, waiting on the ramp, pausing, and recovery cannot repeatedly farm launches. Landing returns to normal ground-following without a springy rebound.
 
@@ -82,6 +86,8 @@ The previous round-contact setup could launch a car 5–6.5 metres above a norma
 
 `npm run build` runs TypeScript checks and generates `dist/`. Browserslist-data age and large physics-chunk warnings do not indicate build failures.
 
+`npm run test:site` adds twenty loader/landing checks. `npm run test:build` runs five post-build checks for the canonical repository base, every local entry asset, all three SVG galleries, both car files, model credits and the branded 404 page. The deployment workflow runs both, so an obsolete asset prefix cannot silently reach Pages again.
+
 `npm run test:maps` checks live map switching, geometry rebuilding, legacy record migration/separation, persisted selection, lap progression and real two-lap jungle driving for both cars. It is also included in `npm run test:game`.
 
 Both cars complete two jungle laps with all 16 ordered gates, exactly two boosts/launches and no recovery, then safely settle at all eight respawn points. `npm run test:ui` renders all seven screens for all three maps with an explicitly stubbed 3D viewport; it checks themes, labels, selection state, image files and race feedback, not GPU output or pixel layout.
@@ -95,6 +101,8 @@ Browser visual and touch-device checks remain separate from these automated test
 ## Source map
 
 - `src/game/Wildway.tsx`: interface screens and flows.
+- `src/game/LandingStory.tsx` and `landing-story.css`: all-map landing narrative, illustrations, map selection and creator links.
+- `src/game/TrackLoader.tsx`: accessible, reduced-motion-aware F1 loading indicator.
 - `src/game/race-hud.css`: isolated right-edge gameplay HUD, safe areas and compact touch/landscape layouts.
 - `src/game/GameScene.tsx`: rendering, loading, camera presentation, and physics integration.
 - `src/game/World.tsx`: road, valley, wildlife, bridges, barriers, and jump.
@@ -115,5 +123,7 @@ Browser visual and touch-device checks remain separate from these automated test
 - `scripts/test-snow.mjs`: open-ascent, winter asset, ice, hurdle, recovery and full-climb physics checks.
 - `scripts/test-ui.mjs`: isolated headless screen/state/art-reference checks.
 - `scripts/test-hud-layout.mjs`: viewport/safe-area formulas, center clearance, contrast and minimum touch-target contracts.
+- `scripts/test-site.mjs`: all-map landing content, internal/gallery links, creator links and F1 loading states.
+- `scripts/test-build.mjs`: published base-path, entry assets, SVG galleries, car files and 404 recovery-page checks. CI runs it after building.
 
 The previous showroom source remains available but is no longer mounted by `src/App.tsx`. Original model authors' licenses and attribution requirements still apply before distributing the game.

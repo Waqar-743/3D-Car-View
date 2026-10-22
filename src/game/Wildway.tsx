@@ -9,6 +9,8 @@ import { clearInput, drivingInput, installDrivingInput } from './input';
 import { gameAudio } from './audio';
 import type { DrivingInput } from './driving';
 import ViewerErrorBoundary from '../components/PanoramicViewer/ViewerErrorBoundary';
+import TrackLoader from './TrackLoader';
+import LandingStory from './LandingStory';
 import './wildway.css';
 import './race-hud.css';
 
@@ -53,24 +55,18 @@ function MapSelector({ compact = false }: { compact?: boolean }) {
 }
 
 function Home() {
-  const selectedCar = useGame((state) => state.selectedCar); const car = carById(selectedCar);
-  const map = mapById(useGame((state) => state.selectedMap)); const jungle = map.id === 'jungle';
-  const best = useGame((state) => state.bestTimes[gameRecordKey(state.selectedMap, state.selectedCar)]);
-  if (map.mode === 'ascent') return <SnowHome />;
-  return <main className="home-page">
-    <div className="home-copy"><p className="ww-eyebrow"><span className="little-star" aria-hidden="true">✳</span> {jungle ? 'LESS OPEN LAND. MORE WILD COMPANY.' : 'GOOD ROADS. QUESTIONABLE DECISIONS.'}</p>
-      <h1 data-page-title tabIndex={-1}>{jungle ? <>Deep jungle.<br /><em>Wild turns.</em><br />Full send.</> : <>Wrong turns.<br /><em>Right kind</em><br />of fun.</>}</h1>
-      <p className="home-description">{jungle ? <>A road beneath the canopy. Two fast laps.<br />And a whole jungle watching your line.</> : <>A mountain valley. A very fast car.<br />And absolutely no sensible way home.</>}</p>
-      <StartButton className="home-start">Let’s get lost</StartButton>
-      <button className="home-garage" onClick={() => useGame.getState().navigate('garage')}>First, meet your ride <span>→</span></button>
-      <div className="home-proof"><Art name={map.character} /><p>{jungle ? '“Keep the roar on the road.”' : '“Brakes are a suggestion.”'}<small>{jungle ? '— WAQAR, your canopy co-driver' : '— Your very unofficial co-driver'}</small></p></div>
-    </div>
-    <div className="scene-heading"><span><i /> EXPLORE IN 3D</span><span>{map.region.toUpperCase()} / {jungle ? '02' : '01'}</span></div>
-    <div className="home-map-switcher"><MapSelector compact /></div>
-    <div className="scene-postcard"><Art name={jungle ? 'lion' : 'eagle-soaring'} /><span>{jungle ? 'New neighbours.' : 'Fresh air.'}<br /><strong>{jungle ? 'Same bad ideas.' : 'Fast corners.'}</strong></span></div>
-    <div className="scene-caption"><span className="location-dot" /><div><strong>{map.name}</strong><span>{map.laps === 1 ? 'One lap.' : 'Two laps.'} Eight gates. {jungle ? 'No shortage of jungle.' : 'Your best shot.'}</span></div><button onClick={() => useGame.getState().navigate('map')} aria-label={`Explore ${map.name} map`}>↗</button></div>
-    <footer className="home-footer"><div><span>YOUR RIDE</span><strong>{car.name}</strong><button onClick={() => useGame.getState().navigate('garage')}>Change →</button></div><div><span>THE LONG WAY ROUND</span><strong>{(TRACK_LENGTH / 1000).toFixed(2)} km <small>/ {map.laps} {map.laps === 1 ? 'lap' : 'laps'}</small></strong></div><div><span>YOUR {jungle ? 'JUNGLE' : 'ALPINE'} BEST</span><strong>{best ? formatTime(best) : 'A blank slate. For now.'}</strong></div><p>LESS SERIOUS.<br /><b>{jungle ? 'MORE WILD.' : 'MORE SCENIC.'}</b></p></footer>
-  </main>;
+  const selectedMap = useGame((state) => state.selectedMap);
+  const car = carById(useGame((state) => state.selectedCar));
+  const startMap = (id: string) => {
+    const game = useGame.getState();
+    if (game.status !== 'idle' && game.status !== 'finished') return;
+    game.selectMap(id);
+    void gameAudio.unlock();
+    useGame.getState().startRace();
+  };
+  return <LandingStory selectedMap={selectedMap} selectedCarName={car.name}
+    onChooseMap={(id) => useGame.getState().selectMap(id)} onStartMap={startMap}
+    onGarage={() => useGame.getState().navigate('garage')} />;
 }
 
 function Garage() {
@@ -109,19 +105,6 @@ function Valley() {
   const map = mapById(useGame((state) => state.selectedMap)); const jungle = map.id === 'jungle';
   if (map.mode === 'ascent') return <SnowMapPage />;
   return <main className="sheet-page valley-page"><div className="map-page-top"><BackButton label="Back to the start" /><MapSelector /></div><div className="valley-layout"><div className="map-art-column"><div className="valley-art"><Art name={jungle ? 'jungle-tree' : 'mountain-range'} className="map-mountain" /><TrackMap /><Art name={jungle ? 'jungle-tree' : 'pine-tree'} className="map-pine" /><Art name={jungle ? 'giraffe' : 'mountain-goat'} className="map-goat" /><span className="map-tag">{jungle ? 'PLEASE DO NOT RACE THE WILDLIFE.' : 'YOU ARE HERE FOR A GOOD TIME.'}</span></div>{jungle && <div className="jungle-field-notes"><p className="ww-eyebrow">THE LOCALS / KEEP A RESPECTFUL DISTANCE</p><div className="wildlife-line">{['lion','giraffe','deer','python','horse','wolf'].map((animal) => <figure key={animal}><Art name={animal} alt={`Cartoon ${animal}`} /><figcaption>{animal}</figcaption></figure>)}</div><div className="jungle-crew"><span>YOUR<br /><b>ROAD CREW</b></span>{['waqar','imran','tatheer'].map((name) => <figure key={name}><Art name={name} alt={`${name.toUpperCase()} cartoon character`} /><figcaption>{name.toUpperCase()}</figcaption></figure>)}</div></div>}</div><div className="valley-copy"><PageTitle eyebrow={jungle ? 'MAP 02 / A ROAD THROUGH THE GREEN.' : 'MAP 01 / PLENTY OF WAYS TO MISBEHAVE.'}>{jungle ? <>Canopy<br /><em>Run.</em></> : <>The alpine<br /><em>loop.</em></>}</PageTitle><p>{map.description}</p><div className="track-facts"><div><strong>{(TRACK_LENGTH / 1000).toFixed(2)}<small>km</small></strong><span>PER LOOP</span></div><div><strong>08</strong><span>GATES EACH LAP</span></div><div><strong>{String(map.laps).padStart(2, '0')}</strong><span>{map.laps === 1 ? 'LAP' : 'LAPS'} TO MAKE IT COUNT</span></div></div><ul className="valley-features"><li><Art name={jungle ? 'stop-station' : 'wooden-bridge'} /><span><strong>{jungle ? 'A roadside breather' : 'Two river crossings'}</strong>{jungle ? 'Find the ranger stop station tucked beside the road. The racing line stays clear.' : 'Keep it on the timber. The river is not a shortcut.'}</span></li><li><Art name={jungle ? 'boost-ramp' : 'jump-ramp'} /><span><strong>A little extra airtime</strong>Drive forward over the {jungle ? 'marigold' : 'orange'} on-road boost ramp for a speed surge and a short flight back onto the circuit.</span></li><li><Art name={jungle ? 'waqar' : 'eagle-soaring'} /><span><strong>{jungle ? 'Trees. Then more trees.' : 'Good company'}</strong>{jungle ? 'A close, leafy canopy, tiny clearings, six animal characters, and WAQAR, IMRAN, and TATHEER along the route.' : 'Goats, eagles, and one very enthusiastic co-driver.'}</span></li></ul><div className="map-race-kit"><Art name="finish-flag" /><Art name="checkpoint" /><Art name={jungle ? 'lap-badge' : 'track-minimap'} /><Art name="winner-trophy" /><span>{map.laps} {map.laps === 1 ? 'lap' : 'laps'}. Ordered gates.<br />One finish worth earning.</span></div><StartButton>Meet me at the start</StartButton></div></div></main>;
-}
-
-function SnowHome() {
-  const car = carById(useGame((state) => state.selectedCar));
-  const best = useGame((state) => state.bestTimes[gameRecordKey('snow', state.selectedCar)]);
-  const summit = CHECKPOINTS[CHECKPOINTS.length - 1].point.y;
-  return <main className="home-page">
-    <div className="home-copy"><p className="ww-eyebrow">MAP 03 / EXPERT / NO EASY WAY UP</p><h1 data-page-title tabIndex={-1}>Cold road.<br /><em>Warm nerves.</em><br />High stakes.</h1><p className="home-description">A long climb through the white.<br />The finish is above the clouds.</p><StartButton className="home-start">Take the colder way</StartButton><button className="home-garage" onClick={() => useGame.getState().navigate('garage')}>First, choose your winter ride <span>→</span></button><div className="home-proof"><Art name="snowman" /><p>“Brake before the ice. Trust me.”<small>— Your very chilled co-driver</small></p></div></div>
-    <div className="scene-heading"><span><i /> EXPLORE IN 3D</span><span>WHITEOUT RIDGE / 03</span></div><div className="home-map-switcher"><MapSelector compact /></div>
-    <div className="scene-postcard"><Art name="snowy-mountain" /><span>Less traction.<br /><strong>More mountain.</strong></span></div>
-    <div className="scene-caption"><span className="location-dot" /><div><strong>Frostbite Ascent</strong><span>{(TRACK_LENGTH / 1000).toFixed(1)} km uphill. {CHECKPOINTS.length - 1} gates. One summit.</span></div><button onClick={() => useGame.getState().navigate('map')} aria-label="Explore Frostbite Ascent map">↗</button></div>
-    <footer className="home-footer"><div><span>YOUR WINTER RIDE</span><strong>{car.name}</strong><button onClick={() => useGame.getState().navigate('garage')}>Change →</button></div><div><span>THE WAY UP</span><strong>{(TRACK_LENGTH / 1000).toFixed(2)} km <small>/ +{Math.round(summit - START.point.y)} m</small></strong></div><div><span>YOUR SUMMIT BEST</span><strong>{best ? formatTime(best) : 'The peak is still waiting.'}</strong></div><p>LESS GRIP.<br /><b>MORE GRIT.</b></p></footer>
-  </main>;
 }
 
 function SnowTrackMap({ x, z, live, checkpoint }: { x: number; z: number; live: boolean; checkpoint: number }) {
@@ -211,6 +194,7 @@ function TouchButton({ action, label, children, className = '' }: { action: keyo
 
 function RaceHUD() {
   const recovery = useGame((state) => state.recovery);
+  const reducedMotion = useGame((state) => state.settings.reducedMotion);
   const { telemetry: data, status, countdown, reaction, cameraMode } = useGame(useShallow((state) => ({ telemetry: state.telemetry, status: state.status, countdown: state.countdown, reaction: state.reaction, cameraMode: state.cameraMode })));
   const map = mapById(useGame((state) => state.selectedMap)); const jungle = map.id === 'jungle';
   const best = useGame((state) => state.bestTimes[gameRecordKey(state.selectedMap, state.selectedCar)]);
@@ -238,7 +222,7 @@ function RaceHUD() {
         <div className="ramp-status" role="status" aria-live="polite" aria-atomic="true">{status === 'running' && (data.boosting || data.airborne) && <div className={`ramp-status-label ${data.airborne ? 'is-airborne' : ''}`}><Art name={jungle ? 'boost-ramp' : data.airborne ? 'eagle-soaring' : 'jump-ramp'} /><span><strong>{data.boosting ? 'BOOST' : 'AIRTIME'}{data.boosting && data.airborne ? ' + AIRTIME' : ''}</strong><small>{data.airborne ? 'HOLD YOUR LINE FOR LANDING' : 'ON-ROAD RAMP POWER'}</small></span></div>}</div>
         {reaction && reaction.until > performance.now() && status === 'running' && <div className="race-reaction" role="status"><Art name={reaction.character} /><p>{reaction.text}</p></div>}
         {status === 'countdown' && <div className="countdown" role="status"><span>THE {map.mode === 'ascent' ? 'SUMMIT' : jungle ? 'JUNGLE' : 'VALLEY'} IS YOURS IN</span><strong key={countdown}>{countdown}</strong><small>{map.mode === 'ascent' ? 'One long climb' : `${map.laps} ${map.laps === 1 ? 'lap' : 'laps'}`} · Hold W or ↑ when it’s time to go.</small></div>}
-        {status === 'loading' && <div className="countdown preparing" role="status"><Art name="racing-wheel" /><span>Warming up your ride…</span></div>}
+        {status === 'loading' && <div className="countdown preparing"><TrackLoader label="Warming up your ride…" compact reducedMotion={reducedMotion} /></div>}
         {status === 'recovering' && recovery && <section className="recovery-card" role="status" aria-live="assertive"><Art name="crying-driver" /><p className="ww-eyebrow">{recovery.reason === 'manual' ? 'A QUICK RESET' : recovery.reason === 'water' ? 'THE RIVER WINS THIS ONE' : 'A LITTLE TOO FAR OFF TRACK'}</p><h2>Back on the<br /><em>good road.</em></h2><strong>{recovery.checkpoint === 0 ? 'RETURNING TO THE START' : `RETURNING TO CHECKPOINT ${String(recovery.checkpoint).padStart(2, '0')}`}</strong><p>Your progress is safe. The race clock keeps running.</p><progress max={1.2} value={1.2 - recovery.remaining} aria-label="Returning the car to the road" /></section>}
         {status === 'running' && data.elapsed < 1.5 && <div className="go-message" role="status">GO GET LOST.</div>}
       </div>
@@ -278,8 +262,8 @@ export default function Windway() {
   }, []);
   useEffect(() => { document.querySelector<HTMLElement>('[data-page-title]')?.focus({ preventScroll: true }); }, [page]);
   return <div className={`wildway map-${map.id} page-${page} ${reducedMotion ? 'calm-motion' : ''}`}>
-    <div className={`scene-shell ${['settings', 'howto', 'map'].includes(page) ? 'scene-muted' : ''}`} aria-label={`Interactive 3D ${map.region}`}><ViewerErrorBoundary resetKey={String(attempt)} onError={(issue) => useGame.getState().setError(issue.message || 'This world could not load. Please try again.')}><Suspense fallback={<div className="scene-loading" role="status"><Art name="racing-wheel" /><span>Opening {map.name}…</span></div>}><GameScene attempt={attempt} /></Suspense></ViewerErrorBoundary></div>
-    {!racing && <Header />}
+    {page !== 'home' && <div className={`scene-shell ${['settings', 'howto', 'map'].includes(page) ? 'scene-muted' : ''}`} aria-label={`Interactive 3D ${map.region}`}><ViewerErrorBoundary resetKey={String(attempt)} onError={(issue) => useGame.getState().setError(issue.message || 'This world could not load. Please try again.')}><Suspense fallback={page === 'race' ? null : <div className="scene-loadscreen"><TrackLoader label={`Opening ${map.name}…`} reducedMotion={reducedMotion} /></div>}><GameScene attempt={attempt} /></Suspense></ViewerErrorBoundary></div>}
+    {!racing && page !== 'home' && <Header />}
     {page === 'home' && <Home />}{page === 'garage' && <Garage />}{page === 'map' && <Valley />}{page === 'settings' && <SettingsPage />}{page === 'howto' && <HowTo />}{page === 'race' && <RaceHUD />}{page === 'results' && <Results />}
     {error && <div className="modal-scrim"><section className="error-card" role="alert"><Art name="crying-driver" /><p className="ww-eyebrow">A SMALL BUMP IN THE ROAD</p><h1>This world needs<br />another try.</h1><p>{error}</p><button className="ww-button ww-primary" onClick={() => { useGame.getState().setError(null); useGame.getState().setReady(false); useGame.getState().navigate('home'); setAttempt((value) => value + 1); }}>Try again <span>↗</span></button></section></div>}
   </div>;

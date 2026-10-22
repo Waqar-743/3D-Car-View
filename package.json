@@ -14,6 +14,8 @@
     "test:ui": "node --max-semi-space-size=4 scripts/test-ui.mjs",
     "test:snow": "node --max-semi-space-size=4 scripts/test-snow.mjs",
     "test:hud": "node --max-semi-space-size=4 scripts/test-hud-layout.mjs",
+    "test:site": "node --max-semi-space-size=4 scripts/test-site.mjs",
+    "test:build": "node --max-semi-space-size=4 scripts/test-build.mjs",
     "optimize:models": "node scripts/optimize-models.mjs"
   },
   "dependencies": {

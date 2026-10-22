@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://waqar-743.github.io/3D-Car-View/?map=jungle">Play Windway</a> ·
-  <a href="https://waqar-743.github.io/3D-Car-View/jungle-pack/">Meet the jungle cast</a> ·
+  <a href="https://waqar-743.github.io/WindWay/">Explore Windway</a> ·
+  <a href="https://waqar-743.github.io/WindWay/jungle-pack/">Meet the jungle cast</a> ·
   <a href="docs/WILDWAY.md">Driver's guide</a>
 </p>
 
@@ -24,6 +24,8 @@ Windway began as a 3D car viewer: turn the camera, admire the bodywork, change t
 That became the direction for this project. I wanted the garage to lead somewhere: a mountain bend, a river crossing, a road disappearing into trees. Not a serious racing simulator. A small, character-filled escape you can open in a browser.
 
 I'm [Waqar Ahmed](https://github.com/Waqar-743), and Windway is my ongoing experiment in turning that idea into something playable. The original showroom is still in the source; the open road is now the main event.
+
+The website tells that story before the engine starts. All three illustrated map chapters share one landing page, with their own scenery, cast, driving notes and start buttons. The garage and game load on demand. A small F1-style car runs left to right while the next scene gets ready, with a calmer alternative when reduced motion is enabled.
 
 ## Pick a road. Give it a story.
 
@@ -56,13 +58,13 @@ Chase and hood cameras, rotating wheels, drifting, dust, skid marks, and synthes
 Use Node.js 20 or newer, then:
 
 ```sh
-git clone https://github.com/Waqar-743/3D-Car-View.git
-cd 3D-Car-View
+git clone https://github.com/Waqar-743/WindWay.git
+cd WindWay
 npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:4175/3D-Car-Design/**. Add **?map=jungle** for Canopy Run or **?map=snow** for Frostbite Ascent. The local folder/base path is intentionally kept compatible with earlier previews; the published build uses the GitHub repository's actual path.
+Open **http://127.0.0.1:4175/WindWay/**. Add **?map=jungle** to select Canopy Run or **?map=snow** to select Frostbite Ascent. All three map stories are on the same landing page. Older local `/3D-Car-Design/` and `/3D-Car-View/` bookmarks redirect to the current preview path; public links use `/WindWay/`.
 
 | What you want to do | Key |
 | --- | --- |
@@ -80,7 +82,7 @@ Touch steering and pedals are available on smaller screens and touch devices.
 
 The alpine collection has **36 editable SVGs**. The jungle adds **25**, including wildlife, the named crew, vegetation, river artwork, the station, lap badge, finish flag, minimap and winner's trophy. Winter brings **18** more: a snowman, snowy fir and mountain, ice and warning signs, snowbank, boulder, slalom gate, hut, summit flag and trophy, minimap, checkpoint, route badge, wind, snowflake, arctic fox and penguin.
 
-[Browse the alpine collection](https://waqar-743.github.io/3D-Car-View/cartoon-pack/) or [open the jungle gallery](https://waqar-743.github.io/3D-Car-View/jungle-pack/). Each gallery offers larger previews and the actual vector files.
+[Browse the alpine collection](https://waqar-743.github.io/WindWay/cartoon-pack/), [open the jungle gallery](https://waqar-743.github.io/WindWay/jungle-pack/), or [meet the winter cast](https://waqar-743.github.io/WindWay/snow-pack/). Each gallery offers larger previews and the actual vector files.
 
 <details>
 <summary>See the jungle cast and race-day kit</summary>
@@ -94,7 +96,7 @@ The alpine collection has **36 editable SVGs**. The jungle adds **25**, includin
 
 ![Windway winter SVG collection](public/snow-pack/contact-sheet.png)
 
-The local preview gallery is at `/3D-Car-Design/snow-pack/`. Every icon is an editable, self-contained SVG with a title and description; larger previews and downloads are built into the gallery.
+The local preview gallery is at `/WindWay/snow-pack/`. Every icon is an editable, self-contained SVG with a title and description; larger previews and downloads are built into the gallery.
 
 </details>
 
@@ -106,7 +108,9 @@ The delivery car models are roughly 3 MiB each, with original source assets pres
 
 ```sh
 npm run test:game
+npm run test:site
 npm run build
+npm run test:build
 npm run preview -- --host 127.0.0.1 --port 4175 --strictPort
 ```
 

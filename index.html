@@ -7,15 +7,28 @@
     <meta name="theme-color" content="#f7f3e7" />
     <title>Windway — Take the long way.</title>
     <meta name="description" content="Three wild worlds. Two very fast cars. Race the alpine loop, explore jungle Canopy Run, or conquer the icy Frostbite Ascent to its mountain-top finish." />
+    <meta property="og:title" content="Windway — Take the long way." />
+    <meta property="og:description" content="A playful driving escape by Waqar Ahmed. Meet three illustrated worlds, choose your car, and find your own way to the finish." />
+    <meta property="og:url" content="https://waqar-743.github.io/WindWay/" />
+    <meta property="og:image" content="https://waqar-743.github.io/WindWay/branding/windway-mark.png" />
+    <link rel="canonical" href="https://waqar-743.github.io/WindWay/" />
+    <style>
+      #initial-loader{position:fixed;inset:0;display:grid;place-content:center;gap:14px;padding:28px;background:#f7f3e7;color:#30483d;text-align:center;font-family:'Trebuchet MS',Arial,sans-serif}#initial-loader>.boot-logo{width:70px;height:70px;margin:auto}#initial-loader>strong{font-size:23px;letter-spacing:-1px}.boot-road{position:relative;width:min(320px,78vw);height:53px;margin-top:12px;overflow:hidden;border-bottom:2px solid #30483d;background:repeating-linear-gradient(90deg,#30483d55 0 15px,transparent 15px 30px) bottom 3px left/100% 2px no-repeat}.boot-car{position:absolute;inset:0;animation:boot-drive 2.1s ease-in infinite}.boot-car img{position:absolute;left:0;bottom:4px;width:96px;height:40px}#boot-label{max-width:320px;font-size:12px;line-height:1.6}#boot-retry{min-height:46px;padding:12px 18px;border:1px solid #30483d;border-radius:7px;background:#efa475;color:#30483d;font:inherit;font-size:13px;cursor:pointer}#boot-error{max-width:320px;font-size:12px;line-height:1.7}#boot-error a{color:#a54e32}#boot-retry:focus-visible,#boot-error a:focus-visible{outline:3px solid #a54e32;outline-offset:4px}@keyframes boot-drive{from{transform:translateX(-100px)}to{transform:translateX(100%)}}@media(prefers-reduced-motion:reduce){.boot-car{animation:none;transform:translateX(calc(50% - 48px))}}
+    </style>
   </head>
   <body style="margin:0;background:#f7f3e7;overflow:hidden">
     <div id="root">
-      <div id="initial-loader" style="position:fixed;inset:0;display:grid;place-content:center;text-align:center;color:#30483d;font-family:system-ui,sans-serif">
-        <img src="./branding/windway-mark.svg" width="80" height="80" alt="" style="margin:0 auto 18px" />
-        <strong style="font-size:23px;letter-spacing:-1px">WINDWAY</strong>
-        <span style="font-size:10px;letter-spacing:2px;margin-top:9px">THE LONG WAY IS LOADING.</span>
+      <div id="initial-loader" role="status" aria-live="polite">
+        <img class="boot-logo" src="./branding/windway-mark.svg" width="70" height="70" alt="" />
+        <strong>WINDWAY</strong>
+        <div class="boot-road" aria-hidden="true"><span class="boot-car"><img src="./branding/f1-loading-car.svg" width="96" height="40" alt="" /></span></div>
+        <span id="boot-label">Finding the long way. Loading Windway…</span>
+        <button id="boot-retry" type="button" hidden onclick="window.location.reload()">Reload Windway</button>
+        <p id="boot-error" hidden>The website files could not load. Try a refresh, or <a href="https://waqar-743.github.io/WindWay/">open Windway’s current address</a>.</p>
+        <noscript><p>Enable JavaScript to explore Windway and play. <a href="https://github.com/Waqar-743/WindWay">Visit the project on GitHub</a>.</p></noscript>
       </div>
     </div>
+    <script>window.addEventListener('error',function(event){if(event.target&&event.target.tagName==='SCRIPT'){var label=document.getElementById('boot-label');var retry=document.getElementById('boot-retry');var note=document.getElementById('boot-error');if(label)label.textContent='The road could not load.';if(retry)retry.hidden=false;if(note)note.hidden=false}},true);</script>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
