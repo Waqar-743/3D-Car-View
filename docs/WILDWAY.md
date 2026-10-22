@@ -1,0 +1,101 @@
+# Windway game guide
+
+## Start locally
+
+```sh
+npm install
+npm run dev
+```
+
+Open http://127.0.0.1:4175/3D-Car-Design/. To preview the new map directly, use http://127.0.0.1:4175/3D-Car-Design/?map=jungle. Port 4174 was the separate original SVG gallery, not the game. The dev server binds only to this computer and does not open or replace unrelated services.
+
+The public game is at https://waqar-743.github.io/3D-Car-View/. GitHub already uses `3D-Car-View` as this repository's canonical name. CI passes that repository name as Vite's base path; local previews retain `/3D-Car-Design/`. The public brand is Windway. Lowercase `wildway` preference keys and some internal filenames are deliberately retained for compatibility with existing saves and links.
+
+## What is playable
+
+- Two selectable circuits: the original one-lap alpine loop and the new two-lap **Canopy Run** in Jungle Reserve. Each map generates its road, bridge protection, ramp, checkpoint gates, safe respawns, and live minimap from one centerline.
+- Canopy Run has dense instanced broadleaf trees, palms, vines, ferns, tiny clearings, jade water, a roadside ranger stop station, and a marigold/coral racing palette. Wildlife and original cartoon crew WAQAR, IMRAN, and TATHEER appear beside the course, outside the driving corridor.
+- McLaren MCL38 and Mercedes-AMG W14, with different acceleration, top speed, steering, braking, and grip. Six paint choices apply to the selected car.
+- A three-second start countdown, seven ordered intermediate gates, then the finish gate **on every lap**. Canopy Run resets the checkpoint sequence for lap two and awards the finish only after both complete loops. Reverse crossings and driving outside a gate do not earn a checkpoint.
+- Gravity, stable road-plane following, a non-bouncy body collider, raised road surfaces, barrier collisions, two river bridges per map, and a boost ramp built into the road (orange in alpine, marigold in jungle).
+- Acceleration, braking, reverse, reduced off-road grip, handbrake drifting, rotating/steering wheels, chase and hood cameras, dust, skid marks, landing/collision reactions, and speed effects.
+- Start, garage, valley map, settings, controls, pause, and results screens, with the custom cartoon SVG collection and low-poly scenery.
+- Synthesized engine, tires, ambience, musical loop, and event sounds. Audio starts only after a user gesture.
+- Device-local map, car, paint, settings, and separate per-map/per-car best times. Existing alpine records are preserved. No account, network service, multiplayer, opponents, or monetization.
+
+## Controls
+
+| Action | Keyboard | Touch |
+| --- | --- | --- |
+| Accelerate | W / Up | GO pedal |
+| Brake, then reverse | S / Down | BRAKE pedal |
+| Steer | A/D / Left/Right | Direction buttons |
+| Handbrake drift | Space | DRIFT button |
+| Last earned checkpoint | R | Back to road |
+| Chase / hood camera | C | Camera button |
+| Pause / resume | Escape / P | Pause / resume menu |
+
+Leaving the circuit for more than 0.4 seconds, falling below an edge, or entering the river automatically starts a 1.2-second recovery. The car returns to the last earned checkpoint (or behind the start line before checkpoint one), with speed and held controls cleared. The camera snaps safely to the recovered car instead of flying across the map.
+
+The orange ramp sits on the circuit, not beside the garage. Drive over it in the forward direction to trigger a brief speed surge and short flight, then hold your line to land back on the road. The race HUD displays BOOST and AIRTIME while each effect is active. Those indicators remain readable with effects off or calmer motion enabled.
+
+Choose **Canopy Run** using the map selector on the start screen or under **The maps**. Its ramp uses marigold and jade instead of orange. The lap counter and race clock cover both laps, and a recovery preserves the current lap and earned checkpoint. Map changes are locked while a race is active. The roadside station is a physical scenery building with a lay-by; it does not promise repairs, fuel, or a shortcut through the course.
+
+The new editable SVG gallery is at `/3D-Car-Design/jungle-pack/index.html`, with animals (lion, giraffe, deer, python, horse, wolf, monkey, toucan, elephant), original named portraits, vegetation, river, station, and recoloured race-kit icons. No real person's likeness is inferred from a name.
+
+The ramp is on the opening straight, 12 metres long and 8 metres wide, leaving a bypass lane on each side. Forward entry adds 9 m/s (about 32 km/h) with a minimum boosted speed of 30 m/s, permits a temporary higher speed limit for 1.5 seconds, then tapers back to the car's ordinary limit. Launch is limited to forward crossings of the ramp lip; reversing, bypassing, waiting on the ramp, pausing, and recovery cannot repeatedly farm launches. Landing returns to normal ground-following without a springy rebound.
+
+Bridge rails are joined physical walls, not decorative beams. The same shared box data creates the visible walls and their colliders, extends protection onto both banks, and supports the deck right up to the rail. Overlapping curved planks cover the outer corners of each joint. Roadside barriers also make contact while the car is still on supported road. Open, unprotected edges retain the recovery rule above.
+
+Recovery keeps the clock running and never grants a later checkpoint. Switching to settings or controls from the pause menu preserves the paused lap. Hiding the tab pauses an active race and releases held controls; hidden tabs also suspend recovery and start-countdown timers.
+
+## Performance and accessibility
+
+- Only the selected car is requested; there is no unconditional second-car or panorama preload.
+- The public car files are approximately 3 MiB each. Original source models are preserved in `img/3d-Model/`.
+- The UI loads separately from the 3D scene and physics engine. The Rapier/WASM chunk is necessarily larger than a normal interface chunk.
+- Trees, mountain peaks, rocks, road markings, dust, and skid marks use instancing. Simulation is fixed at 60 Hz; UI telemetry is published at 10 Hz, not every frame.
+- Automatic/light graphics reduce vegetation, pixel density, antialiasing, and shadows. The settings, map, controls, pause, and results views render on demand.
+- The jungle forest uses six instanced batches rather than an individual draw call for every tree or plant. Low quality reduces the tree target from 1,470 to 820, canopy detail/shadows, and river marks. Only the selected map's SVG textures are requested by its scene; changing maps remounts and disposes the previous scene.
+- Camera shake, speed effects, and particles can be turned off; calmer motion is a separate preference. CSS animations honor the operating system's reduced-motion preference.
+- Selection controls expose their state, settings have labels, keyboard focus is visible, page headings receive focus, and the pause dialog traps keyboard focus.
+- Loading and graphics/model failures have visible feedback and a retry action. Storage failures do not prevent play.
+
+## Verification
+
+`npm run test:game` tests the actual controller, curve, road mesh, gate-crossing function, and state store. It also drives each car through a complete Rapier simulation with the same road, colliders, gravity, traction, steering, and ordered gates as the game. It does not teleport through gates and does not modify browser records.
+
+Both cars complete all eight gates with one ramp boost and about 0.70 seconds of intentional airtime, then land back on the circuit. Ordinary grounded travel is checked within 3 cm of the intended ride height. The tests also cover real road-edge falls, barriers, velocity clearing and settled respawns at every gate, recovery timing/progression, stale held keys, reverse entry, both bypass lanes, and ramp geometry staying inside the road. These are automated simulated laps, not player benchmarks or measured browser frame rates.
+
+`npm run test:game` also runs the dedicated bridge/barrier suite on **both maps**. Each map covers 226 actual impacts across both bridges, both sides and both cars, direct/diagonal/joint/end contacts, actual collision events at normal and boosted top speeds, and near-rail driving through bridge entrances and exits. Static checks require every curved rail joint to have supporting deck coverage. Run `npm run test:barriers` for the alpine suite, or `node --max-semi-space-size=4 scripts/test-barriers.mjs --map=jungle` for jungle. No browser records are changed.
+
+The previous round-contact setup could launch a car 5–6.5 metres above a normal road and leave it airborne for around 1.5 seconds. It has been replaced by continuous segment-projected road height, zero restitution, and a shared arcade ground-following controller. Decorative body bobbing has also been removed. Tests call that same controller rather than duplicating its motion logic.
+
+`npm run build` runs TypeScript checks and generates `dist/`. Browserslist-data age and large physics-chunk warnings do not indicate build failures.
+
+`npm run test:maps` checks live map switching, geometry rebuilding, legacy record migration/separation, persisted selection, lap progression and real two-lap jungle driving for both cars. It is also included in `npm run test:game`.
+
+The complete suite now has 120 checks: 24 driving/state checks, 11 barrier checks on each map (452 total full-speed impacts), 14 map/lap/asset checks, and 60 headless interface checks. Both cars complete two jungle laps with all 16 ordered gates, exactly two boosts/launches and no recovery, then safely settle at all eight respawn points. `npm run test:ui` renders all seven screens for both maps with an explicitly stubbed 3D viewport; it checks themes, labels, selection state, image files and race feedback, not GPU output or pixel layout.
+
+Browser visual and touch-device checks remain separate from these automated tests. Do not treat passing controller tests as proof of a measured frame rate or a tested mobile layout.
+
+## Source map
+
+- `src/game/Wildway.tsx`: interface screens and flows.
+- `src/game/GameScene.tsx`: rendering, loading, camera presentation, and physics integration.
+- `src/game/World.tsx`: road, valley, wildlife, bridges, barriers, and jump.
+- `src/game/JungleWorld.tsx`: dense tropical vegetation, wildlife/crew SVGs, river, and roadside station.
+- `src/game/maps.ts`: map catalog, colour themes, route selection, and map-specific record keys.
+- `src/game/Vehicle.tsx`: rigid-body driving, recovery, race progression, chase camera, and effects.
+- `src/game/driving.ts`: deterministic traction/steering and gate-crossing functions.
+- `src/game/vehiclePhysics.ts`: shared road adhesion, body configuration, safe respawns, and fall/road-boundary rules.
+- `src/game/trackBarriers.ts`: shared solid rails, bridge decks, roadside walls, and supported-width rules.
+- `src/game/trackFeatures.ts`: the on-road ramp's geometry, position, dimensions, boost, and launch configuration.
+- `src/game/store.ts`: race lifecycle and validated local preferences.
+- `src/game/CarVisual.tsx`: optimized model reuse, toon materials, paint, and wheel animation.
+- `scripts/test-game.mjs`: repeatable logic and physics tests.
+- `scripts/test-barriers.mjs`: bridge-wall collision, support-joint, and boosted-impact regression tests.
+- `scripts/test-maps.mjs`: map/lap/record regressions and full two-lap jungle drives.
+- `scripts/test-ui.mjs`: isolated headless screen/state/art-reference checks.
+
+The previous showroom source remains available but is no longer mounted by `src/App.tsx`. Original model authors' licenses and attribution requirements still apply before distributing the game.

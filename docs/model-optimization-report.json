@@ -1,0 +1,130 @@
+{
+  "settings": {
+    "triangleRatioTarget": 0.6,
+    "maxRelativeError": 0.0005,
+    "maxTextureSize": 1024,
+    "geometryCompression": "EXT_meshopt_compression",
+    "textureFormat": "webp"
+  },
+  "models": [
+    {
+      "id": "mclaren-mcl38",
+      "source": "img/3d-Model/f1_2024_mclaren_mcl38.glb",
+      "output": "public/models/mclaren-mcl38/f1_2024_mclaren_mcl38.glb",
+      "before": {
+        "bytes": 20655844,
+        "triangles": 265912,
+        "meshDraws": 207,
+        "materials": 41,
+        "bounds": {
+          "min": [
+            -1.0006273078253436,
+            -0.4563382719687735,
+            -2.5929562895553886
+          ],
+          "max": [
+            1.0006249236276155,
+            0.7214171684858961,
+            3.0170028468394463
+          ]
+        },
+        "textureMemoryMiB": 590.35
+      },
+      "after": {
+        "bytes": 3155996,
+        "triangles": 176370,
+        "meshDraws": 46,
+        "materials": 40,
+        "bounds": {
+          "min": [
+            -1.000628778399734,
+            -0.4563059033067798,
+            -2.5929563253108086
+          ],
+          "max": [
+            1.000626441860414,
+            0.7214547730606161,
+            3.01700282961491
+          ]
+        },
+        "textureMemoryMiB": 105.69
+      },
+      "preservedParts": [
+        "WHEEL_LF_110",
+        "WHEEL_RF_115",
+        "WHEEL_LR_120",
+        "WHEEL_RR_125",
+        "STEER_HR_189",
+        "STEER_HR_GLASS_164",
+        "STEER_HR_LCD_165"
+      ]
+    },
+    {
+      "id": "mercedes-w14",
+      "source": "img/3d-Model/f1_2023_mercedes_amg_w14_e_performance_s1.glb",
+      "output": "public/models/mercedes-w14/f1_2023_mercedes_amg_w14_e_performance_s1.glb",
+      "before": {
+        "bytes": 16337468,
+        "triangles": 302443,
+        "meshDraws": 210,
+        "materials": 35,
+        "bounds": {
+          "min": [
+            -1.0058017406290993,
+            0.0014099996491923061,
+            -2.4894168887997608
+          ],
+          "max": [
+            1.0057857076293324,
+            1.1904491422467687,
+            3.1408550727765565
+          ]
+        },
+        "textureMemoryMiB": 97.14
+      },
+      "after": {
+        "bytes": 3216924,
+        "triangles": 197683,
+        "meshDraws": 47,
+        "materials": 35,
+        "bounds": {
+          "min": [
+            -1.0058128435813745,
+            0.0014408562381065249,
+            -2.489416982288073
+          ],
+          "max": [
+            1.005796958943542,
+            1.190232777932204,
+            3.140855091180483
+          ]
+        },
+        "textureMemoryMiB": 86.11
+      },
+      "preservedParts": [
+        "WHEEL_LF_38",
+        "WHEEL_RF_62",
+        "WHEEL_RR_68",
+        "WHEEL_LR_82",
+        "STEER_HR_148"
+      ]
+    }
+  ],
+  "posters": [
+    {
+      "file": "f1-from-left-far",
+      "beforeBytes": 1581313,
+      "afterBytes": 50450
+    },
+    {
+      "file": "from-right",
+      "beforeBytes": 1687969,
+      "afterBytes": 70638
+    },
+    {
+      "file": "from-right-close",
+      "beforeBytes": 1705777,
+      "afterBytes": 73282
+    }
+  ]
+}
