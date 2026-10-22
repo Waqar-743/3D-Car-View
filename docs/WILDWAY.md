@@ -13,7 +13,7 @@ The public website and game are at https://waqar-743.github.io/WindWay/. The rep
 
 ## What is playable
 
-The website now opens with one illustrated, scrollable landing page: an introduction, all three map chapters, their local SVG cast, a garage introduction, driving notes, Waqar’s project story and the creator/repository footer. Selecting a road updates the chosen starting line; each chapter also has a direct Drive button. The 3D viewport, physics engine and car models are not mounted on the landing page and load only when entering the garage or game views.
+The website now opens with one illustrated, scrollable landing page: an introduction, all three map chapters, their local SVG cast, a garage introduction, driving notes, Waqar’s project story and the creator/repository footer. Selecting a road updates the chosen starting line. The hero's Explore button opens the existing details page for that road without starting a race; each chapter still has a direct Drive button. The 3D viewport, physics engine and car models are not mounted on the landing page and load only when entering the garage, map details or game views.
 
 Loading uses an original side-profile F1-style car moving left to right, from the initial HTML boot screen to scene loading and the compact race HUD. Only actual asset progress gets a percentage; unknown progress remains indeterminate. Calmer motion and system reduced-motion preferences stop the animation. The boot screen offers a retry and canonical-site link if the entry script cannot load.
 
@@ -47,7 +47,7 @@ On Frostbite Ascent the start is eight metres along the road, not behind its ope
 
 The orange ramp sits on the circuit, not beside the garage. Drive over it in the forward direction to trigger a brief speed surge and short flight, then hold your line to land back on the road. The race HUD displays BOOST and AIRTIME while each effect is active. Those indicators remain readable with effects off or calmer motion enabled.
 
-All driving information now lives in a compact **right-edge dashboard**: timer, lap/ascent state, gates, surface warning, speed, minimap and camera/recovery controls. Countdown, GO, boost and recovery messages stay inside that same edge stack; there is no center-screen speed-lines overlay or recovery scrim. Touch steering and pedals occupy the two bottom corners. The dashboard reserves their space, honors safe-area insets and stays at least twelve pixels to the right of the viewport centerline. Short screens simplify optional map/character details while retaining critical driving information; unusually small viewports can scroll within the panel. Pause and results remain intentional separate screens.
+The **live roadmap stays at the bottom-left and speed at the bottom-right** on all three maps. On touch layouts both widgets sit above the steering and pedals, never behind them, and the roadmap remains visible on short landscape screens. Timer, lap/ascent state, gates, surface warnings and camera/recovery controls stay in the compact top-right dashboard. Countdown, GO, boost and recovery messages remain inside that edge stack; there is no center-screen speed-lines overlay or recovery scrim. All three information areas honor safe-area insets and remain at least twelve pixels away from the viewport centerline. The dashboard reserves space for the speed widget and touch controls; unusually small viewports can scroll within that panel. Pause and results remain intentional separate screens.
 
 Choose **Canopy Run** using the map selector on the start screen or under **The maps**. Its ramp uses marigold and jade instead of orange. The lap counter and race clock cover both laps, and a recovery preserves the current lap and earned checkpoint. Map changes are locked while a race is active. The roadside station is a physical scenery building with a lay-by; it does not promise repairs, fuel, or a shortcut through the course.
 
@@ -103,7 +103,7 @@ Browser visual and touch-device checks remain separate from these automated test
 - `src/game/Wildway.tsx`: interface screens and flows.
 - `src/game/LandingStory.tsx` and `landing-story.css`: all-map landing narrative, illustrations, map selection and creator links.
 - `src/game/TrackLoader.tsx`: accessible, reduced-motion-aware F1 loading indicator.
-- `src/game/race-hud.css`: isolated right-edge gameplay HUD, safe areas and compact touch/landscape layouts.
+- `src/game/race-hud.css`: split-corner gameplay HUD, safe areas and compact touch/landscape layouts.
 - `src/game/GameScene.tsx`: rendering, loading, camera presentation, and physics integration.
 - `src/game/World.tsx`: road, valley, wildlife, bridges, barriers, and jump.
 - `src/game/JungleWorld.tsx`: dense tropical vegetation, wildlife/crew SVGs, river, and roadside station.

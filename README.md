@@ -1,61 +1,44 @@
 <p align="center">
-  <img src="public/branding/windway-mark.svg" width="136" height="136" alt="Windway logo: a winding road, mountains, a jungle leaf and a little wind" />
+  <img src="public/branding/windway-mark.svg" width="120" height="120" alt="Windway: a winding road through mountains and jungle" />
 </p>
 
 <h1 align="center">Windway</h1>
 
 <p align="center">
   <strong>Take the long way.</strong><br />
-  A playful browser driving game about fast cars, strange company, and roads worth taking twice.
+  Two cars. Three roads. A little escape in your browser.
 </p>
 
 <p align="center">
-  <a href="https://waqar-743.github.io/WindWay/">Explore Windway</a> ·
-  <a href="https://waqar-743.github.io/WindWay/jungle-pack/">Meet the jungle cast</a> ·
-  <a href="docs/WILDWAY.md">Driver's guide</a>
+  <a href="https://waqar-743.github.io/WindWay/">Play Windway</a> ·
+  <a href="https://github.com/Waqar-743/WindWay">Explore the source</a>
 </p>
 
-## It started with a car you could only look at.
+## From the showroom to the open road
 
-Windway began as a 3D car viewer: turn the camera, admire the bodywork, change the paint. Then the question changed.
+I'm [Waqar Ahmed](https://github.com/Waqar-743). Windway started as a 3D car viewer: you could look around a car, change its paint, and admire it. But I kept coming back to one question: **where would I drive it?**
 
-**What if you could stop looking and start driving?**
+So I gave it a road. Then a jungle. Then a snowy mountain that makes you earn the view.
 
-That became the direction for this project. I wanted the garage to lead somewhere: a mountain bend, a river crossing, a road disappearing into trees. Not a serious racing simulator. A small, character-filled escape you can open in a browser.
+This isn't a serious racing simulator. It's my ongoing experiment in making a small, playful world you can jump into for a drive. The cartoon animals, familiar names, and occasional bad landing are part of its personality.
 
-I'm [Waqar Ahmed](https://github.com/Waqar-743), and Windway is my ongoing experiment in turning that idea into something playable. The original showroom is still in the source; the open road is now the main event.
+## Choose your next story
 
-The website tells that story before the engine starts. All three illustrated map chapters share one landing page, with their own scenery, cast, driving notes and start buttons. The garage and game load on demand. A small F1-style car runs left to right while the next scene gets ready, with a calmer alternative when reduced motion is enabled.
+- **The alpine loop** — an open valley, river bridges, goats and eagles. One lap to find your rhythm, with an on-road boost jump.
+- **Canopy Run** — two laps through dense jungle, with wildlife, a ranger station, and the cartoon road crew: WAQAR, IMRAN and TATHEER.
+- **Frostbite Ascent** — the hardest road: a 6.44 km mountain climb with slippery ice, snow-block obstacles, and a finish at the summit.
 
-## Pick a road. Give it a story.
+All three live on one landing page. Use the hero's **Explore** button to visit the selected map's details before starting, or head to the garage to choose a car.
 
-| Road | The feeling | The challenge |
-| --- | --- | --- |
-| **The alpine loop** | Open mountain views, timber bridges, goats and eagles. Warm paper, sage and orange. | One lap, eight ordered gates, one orange boost jump. |
-| **Canopy Run** | Dense broadleaf trees, palms, vines, jade water and tiny clearings. Jade, marigold and coral. | Two laps, every gate on both loops, and a short flight from the on-road ramp. |
-| **Frostbite Ascent** | Snow-covered firs, distant peaks, a snowman co-driver and a finish above the clouds. Ice blue and rescue coral. | Expert: a 6.44 km one-way climb, about 362 m of elevation gain, eight ice zones, fifteen solid slalom hurdles and sixteen ordered gates ending at the summit. |
+## Your car, your pace
 
-Every road has a live minimap, checkpoint recovery and a finish worth earning. The two circuits have protected bridge edges. The jungle adds a roadside ranger station and a cast of lions, giraffes, deer, pythons, horses, wolves, monkeys, toucans and elephants. The mountain is a different kind of story: no laps, no boost ramp, less traction, narrower bends and one long push to the top.
+Pick the lively **McLaren MCL38** or the grippier **Mercedes-AMG W14**, choose a paint colour, and chase your own best time. This is a **single-player time trial**, not multiplayer; records stay on your device, separately for each map and car.
 
-**WAQAR, IMRAN and TATHEER** are the original cartoon road crew. Their names are part of the game; their portraits are fictional designs, not assumed likenesses of real people.
+During a drive, the live roadmap sits at the bottom-left and speed at the bottom-right, above the touch controls when needed. Time, laps and gates stay at the top-right. Miss an unprotected edge? You'll return to your last checkpoint without losing your progress.
 
-## Two cars. Different attitudes.
+## Run it locally
 
-The **McLaren MCL38** is the quicker launch and the livelier turn-in. The **Mercedes-AMG W14** trades some initial punch for a higher top speed and more grip. Pick your car, choose one of six paint colours, and take any of the three roads.
-
-There are no opponents or multiplayer yet. This is a single-player time trial: your line, your mistakes, your next personal best. Records are saved separately for each map and car, on your own device.
-
-## A little chaos. A dependable way back.
-
-A marked ramp on the two circuits gives you a brief speed surge and intentional airtime. Ordinary driving stays planted. Bridge walls, mountain rails and snow-block hurdles are physical barriers, not just scenery. If you leave an unprotected edge or end up in the river, the game returns you to your last earned checkpoint without erasing your progress.
-
-On Frostbite Ascent, brake **before** the blue ice. Packed snow is already slippery; ice reduces grip and braking further. Thread the alternating obstacles, keep the steering gentle, and watch the altitude rise. The last gate is on the summit, not back at base camp.
-
-Chase and hood cameras, rotating wheels, drifting, dust, skid marks, and synthesized engine sounds give the road some life. Sound starts after your first interaction. Graphics quality, effects, volume and calmer motion are adjustable.
-
-## Take the wheel locally
-
-Use Node.js 20 or newer, then:
+With Node.js 20 or newer:
 
 ```sh
 git clone https://github.com/Waqar-743/WindWay.git
@@ -64,73 +47,35 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:4175/WindWay/**. Add **?map=jungle** to select Canopy Run or **?map=snow** to select Frostbite Ascent. All three map stories are on the same landing page. Older local `/3D-Car-Design/` and `/3D-Car-View/` bookmarks redirect to the current preview path; public links use `/WindWay/`.
+Open [the local game](http://127.0.0.1:4175/WindWay/).
 
-| What you want to do | Key |
-| --- | --- |
-| Accelerate | W / Up |
-| Brake, then reverse | S / Down |
-| Steer | A/D / Left/Right |
-| Handbrake drift | Space |
-| Return to the last earned checkpoint | R |
-| Switch chase / hood camera | C |
-| Pause / resume | Escape / P |
+**Controls:** W / arrows to drive, S to brake or reverse, A/D to steer, Space to drift, R to recover, C to switch camera, and Escape / P to pause. Touch steering and pedals are available on smaller screens and touch devices. Sound, graphics and calmer motion can be adjusted in Settings.
 
-Touch steering and pedals are available on smaller screens and touch devices.
+## A peek under the bonnet
 
-## The cast lives in SVG
+Built with React, TypeScript, Three.js, React Three Fiber, Rapier and Zustand. The game loads the selected car on demand, and lighter graphics reduce scenery and shadows.
 
-The alpine collection has **36 editable SVGs**. The jungle adds **25**, including wildlife, the named crew, vegetation, river artwork, the station, lap badge, finish flag, minimap and winner's trophy. Winter brings **18** more: a snowman, snowy fir and mountain, ice and warning signs, snowbank, boulder, slalom gate, hut, summit flag and trophy, minimap, checkpoint, route badge, wind, snowflake, arctic fox and penguin.
-
-[Browse the alpine collection](https://waqar-743.github.io/WindWay/cartoon-pack/), [open the jungle gallery](https://waqar-743.github.io/WindWay/jungle-pack/), or [meet the winter cast](https://waqar-743.github.io/WindWay/snow-pack/). Each gallery offers larger previews and the actual vector files.
-
-<details>
-<summary>See the jungle cast and race-day kit</summary>
-
-![Windway jungle SVG collection](public/jungle-pack/contact-sheet.png)
-
-</details>
-
-<details>
-<summary>See the Frostbite Ascent winter collection</summary>
-
-![Windway winter SVG collection](public/snow-pack/contact-sheet.png)
-
-The local preview gallery is at `/WindWay/snow-pack/`. Every icon is an editable, self-contained SVG with a title and description; larger previews and downloads are built into the gallery.
-
-</details>
-
-## Built to keep the road moving
-
-Windway uses React, TypeScript, Three.js, React Three Fiber, Rapier and Zustand. Repeated trees and plants are instanced, physics steps at a fixed rate, and interface telemetry updates less often than rendering. The selected car loads on demand; there is no automatic panorama or second-car download.
-
-The delivery car models are roughly 3 MiB each, with original source assets preserved. Light graphics reduce foliage, shadows and pixel density. Those are design choices, not a promise of a particular frame rate on every device.
+The characters and roadside details are editable SVGs: [alpine gallery](https://waqar-743.github.io/WindWay/cartoon-pack/), [jungle gallery](https://waqar-743.github.io/WindWay/jungle-pack/), [snow gallery](https://waqar-743.github.io/WindWay/snow-pack/).
 
 ```sh
 npm run test:game
 npm run test:site
 npm run build
 npm run test:build
-npm run preview -- --host 127.0.0.1 --port 4175 --strictPort
 ```
 
-The automated suite covers driving and race state, both circuits' bridge collisions, mountain rails and obstacles, ice handling, ordered summit progression, saved records, SVG references, headless screens, and responsive HUD rules. Both cars complete simulated two-lap jungle runs and full summit climbs. These tests do not replace browser, touch-device or frame-rate testing.
+These automated checks cover game state, track rules, UI and build assets; they don't replace real browser and device testing. GitHub Actions publishes the main branch to GitHub Pages.
 
-GitHub Actions builds and publishes the main branch to GitHub Pages. The deployed base path follows the repository name, so the public site does not accidentally request files from an old project URL.
+For the longer version, see the [driver's guide](docs/WILDWAY.md), [performance notes](docs/PERFORMANCE.md), or [original viewer documentation](docs/LEGACY_VIEWER.md).
 
-## Follow the trail
+## Credit where it's due
 
-- [Driver's guide and implementation notes](docs/WILDWAY.md)
-- [Performance work and model optimization](docs/PERFORMANCE.md)
-- [Model attribution and licenses](public/MODEL_CREDITS.md)
-- [Archived car-viewer documentation](docs/LEGACY_VIEWER.md)
+Car models are by [MattsActuallyUsefulModels](https://sketchfab.com/MattsActuallyUsefulModels), under **CC BY-NC-SA 4.0**: non-commercial use only, with modified model assets retaining the same license. Full sources, changes and notices are in [MODEL_CREDITS.md](public/MODEL_CREDITS.md).
 
-## A note on the cars
-
-The car artwork is by [MattsActuallyUsefulModels](https://sketchfab.com/MattsActuallyUsefulModels), distributed under **CC BY-NC-SA 4.0**. The source links, original titles, optimization changes and license notices are in [MODEL_CREDITS.md](public/MODEL_CREDITS.md). The model license does not permit commercial use; modified model assets retain the same license.
-
-Windway is an independent learning/demo project. It is not affiliated with Formula 1, McLaren, Mercedes-AMG or the model artist, and their names and marks belong to their respective owners.
+Windway is an independent learning/demo project, not affiliated with Formula 1, McLaren, Mercedes-AMG or the model artist. Their names and marks belong to their owners. The named cartoon crew are fictional designs, not portraits of real people.
 
 ---
 
-Made by [Waqar Ahmed](https://github.com/Waqar-743). Still finding out what is around the next bend.
+Made by [Waqar Ahmed](https://github.com/Waqar-743). Still finding out what's around the next bend.
+
+[Follow Windway on GitHub](https://github.com/Waqar-743/WindWay).

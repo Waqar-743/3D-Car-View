@@ -7,6 +7,7 @@ export interface LandingStoryProps {
   selectedMap: string;
   selectedCarName: string;
   onChooseMap: (id: string) => void;
+  onExploreMap: (id: string) => void;
   onStartMap: (id: string) => void;
   onGarage: () => void;
 }
@@ -157,7 +158,7 @@ function RoadChapter({ story, selected, onStart }: { story: RoadStory; selected:
   </article>;
 }
 
-export default function LandingStory({ selectedMap, selectedCarName, onChooseMap, onStartMap, onGarage }: LandingStoryProps) {
+export default function LandingStory({ selectedMap, selectedCarName, onChooseMap, onExploreMap, onStartMap, onGarage }: LandingStoryProps) {
   const chosen = ROAD_STORIES.find((road) => road.id === selectedMap) ?? ROAD_STORIES[0];
   return <div className="windway-landing">
     <a className="wl-skip" href="#windway-main">Skip to the roads</a>
@@ -168,7 +169,7 @@ export default function LandingStory({ selectedMap, selectedCarName, onChooseMap
     </header>
     <main id="windway-main">
       <section className="wl-hero" aria-labelledby="windway-title">
-        <div className="wl-hero-copy"><p className="wl-kicker">A SMALL BROWSER GAME. A VERY LONG WAY HOME.</p><h1 id="windway-title" data-page-title tabIndex={-1}>Three roads.<br />One very good<br /><span>bad idea.</span></h1><p className="wl-hero-intro">A fast car, a cartoon world, and a road that keeps asking, <q>what’s around the next bend?</q></p><p className="wl-hero-detail">Drive the valley. Get lost in the canopy. Earn the snowy summit. Windway is a little escape made for the joy of taking the long way.</p><button type="button" className="wl-drive wl-hero-drive" onClick={() => onStartMap(chosen.id)}>Drive {chosen.name}<Arrow diagonal /></button><button type="button" className="wl-garage-link" onClick={onGarage}>Your ride: {selectedCarName}<span>Change car<Arrow /></span></button><p className="wl-browser-note">Plays in your browser · Keyboard or touch controls</p></div>
+        <div className="wl-hero-copy"><p className="wl-kicker">A SMALL BROWSER GAME. A VERY LONG WAY HOME.</p><h1 id="windway-title" data-page-title tabIndex={-1}>Three roads.<br />One very good<br /><span>bad idea.</span></h1><p className="wl-hero-intro">A fast car, a cartoon world, and a road that keeps asking, <q>what’s around the next bend?</q></p><p className="wl-hero-detail">Drive the valley. Get lost in the canopy. Earn the snowy summit. Windway is a little escape made for the joy of taking the long way.</p><button type="button" className="wl-drive wl-hero-drive" onClick={() => onExploreMap(chosen.id)}>Explore {chosen.name}<Arrow diagonal /></button><button type="button" className="wl-garage-link" onClick={onGarage}>Your ride: {selectedCarName}<span>Change car<Arrow /></span></button><p className="wl-browser-note">Plays in your browser · Keyboard or touch controls</p></div>
         <HeroPostcard />
       </section>
 

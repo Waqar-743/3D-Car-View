@@ -81,19 +81,26 @@ function elementWithClass(html, className) {
   }
   return null;
 }
-function assertRightEdgeHUD(html, status) {
+function assertCornerHUD(html, status) {
   const root = elementWithClass(html, 'race-ui');
   assert(root, 'No race HUD');
   assert(root.startsWith(`<div class="race-ui race-ui-${status}"`), 'HUD must expose the current race status');
-  assert(root.slice(0, root.indexOf('>')).includes('data-hud-layout="right-edge"'), 'HUD must identify its right-edge layout');
+  assert(root.slice(0, root.indexOf('>')).includes('data-hud-layout="split-corners"'), 'HUD must identify its split-corner layout');
   const dashboard = elementWithClass(root, 'race-dashboard');
   assert(dashboard?.startsWith('<aside'), 'Race information needs a dedicated aside');
   assert(dashboard.slice(0, dashboard.indexOf('>')).includes('aria-label="Race information"'), 'Dashboard needs an accessible landmark label');
   assert.equal((root.match(/class="race-dashboard"/g) ?? []).length, 1, 'HUD must contain exactly one dashboard');
   const outside = root.replace(dashboard, '');
-  for (const className of ['race-stats', 'lap-clock', 'lap-counter', 'checkpoint-progress', 'race-minimap', 'speed-gauge', 'race-tools', 'race-notices']) {
+  for (const className of ['race-stats', 'lap-clock', 'lap-counter', 'checkpoint-progress', 'race-tools', 'race-notices']) {
     assert(elementWithClass(dashboard, className), `Missing dashboard component: ${className}`);
     assert(!elementWithClass(outside, className), `${className} escaped the dashboard`);
+  }
+  for (const className of ['race-minimap', 'speed-gauge']) {
+    const widget = elementWithClass(outside, className);
+    assert(widget?.startsWith('<section'), `${className} needs its own corner landmark`);
+    assert(widget.slice(0, widget.indexOf('>')).includes('aria-label='), `${className} needs an accessible label`);
+    assert(!elementWithClass(dashboard, className), `${className} must be separate from the timer panel`);
+    assert.equal((root.match(new RegExp(`class="${className}"`, 'g')) ?? []).length, 1, `${className} must not be duplicated`);
   }
   for (const className of ['winter-drive-info', 'ramp-status', 'race-reaction', 'countdown', 'recovery-card', 'go-message']) {
     assert(!elementWithClass(outside, className), `${className} must not cover the center of the track`);
@@ -169,10 +176,12 @@ for (const map of GAME_MAPS) {
       });
     }
     if (page === 'race') {
-      check(`${map.id} race: ordinary HUD information stays inside the right-edge landmark`, () => {
-        const { dashboard } = assertRightEdgeHUD(html, 'running');
+      check(`${map.id} race: timer stays right while roadmap and speed have separate corners`, () => {
+        const { dashboard, outside } = assertCornerHUD(html, 'running');
         assert(dashboard.includes(formatTime(12.34)), 'Timer is missing from the dashboard');
-        assert(dashboard.includes(map.region.toUpperCase()), 'Minimap label is missing from the dashboard');
+        assert(elementWithClass(outside, 'race-minimap')?.includes(map.region.toUpperCase()), 'Roadmap must identify the current map');
+        assert(elementWithClass(outside, 'race-minimap')?.includes('class="track-map"'), 'Roadmap must render the actual live track');
+        assert(elementWithClass(outside, 'speed-gauge')?.includes('Speed 87 kilometers per hour'), 'Corner speed must match live telemetry');
         assert(dashboard.includes('Pause race'), 'Pause control is missing from the dashboard');
       });
     }
@@ -247,7 +256,7 @@ for (const map of GAME_MAPS) {
     });
     const html = render();
     check(`${map.id} ${status}: feedback stays in the edge dashboard, except the explicit pause menu`, () => {
-      const { dashboard, outside, notices } = assertRightEdgeHUD(html, status);
+      const { dashboard, outside, notices } = assertCornerHUD(html, status);
       assertImageFiles(html);
       if (status === 'paused') {
         assert(outside.includes('pause-title'), 'Pause menu should remain a separate, deliberate modal');
@@ -273,7 +282,7 @@ for (const map of GAME_MAPS) {
     Object.assign(initial, useGame.getState());
     const html = render();
     check(`${map.id} ${label}: launch, start and character feedback never become center overlays`, () => {
-      const { notices } = assertRightEdgeHUD(html, 'running');
+      const { notices } = assertCornerHUD(html, 'running');
       const ramp = elementWithClass(notices, 'ramp-status');
       assert(ramp, 'Ramp feedback must be part of the compact notice stack');
       assert(ramp.includes(boosting ? 'BOOST' : 'AIRTIME'));
@@ -286,11 +295,11 @@ for (const map of GAME_MAPS) {
   prepare(map, 'race');
   useGame.setState({ telemetry: { ...useGame.getState().telemetry, elapsed: 3661.99, speed: 1234, checkpoint: map.mode === 'ascent' ? 16 : 8 } });
   Object.assign(initial, useGame.getState());
-  check(`${map.id} race: long times and large speed values remain complete dashboard text`, () => {
+  check(`${map.id} race: long times and large speed values remain complete in their own widgets`, () => {
     const html = render();
-    const { dashboard } = assertRightEdgeHUD(html, 'running');
+    const { dashboard, outside } = assertCornerHUD(html, 'running');
     assert(elementWithClass(dashboard, 'lap-clock')?.includes(formatTime(3661.99)));
-    assert(elementWithClass(dashboard, 'speed-gauge')?.includes('<strong>1234</strong>'));
+    assert(elementWithClass(outside, 'speed-gauge')?.includes('<strong>1234</strong>'));
     assert(dashboard.includes(`aria-label="${map.mode === 'ascent' ? 16 : 8} of ${map.mode === 'ascent' ? 16 : 8} gates completed"`));
     assertImageFiles(html);
   });
@@ -301,7 +310,7 @@ useGame.setState({ telemetry: { ...useGame.getState().telemetry, surface: 'black
 Object.assign(initial, useGame.getState());
 check('snow race: ice warning remains a labelled edge-dashboard status at the summit', () => {
   const html = render();
-  const { dashboard } = assertRightEdgeHUD(html, 'running');
+  const { dashboard } = assertCornerHUD(html, 'running');
   const warning = elementWithClass(dashboard, 'winter-drive-info');
   assert(warning?.includes('role="status"'));
   assert(warning.includes('BLACK ICE / EASY INPUTS'));

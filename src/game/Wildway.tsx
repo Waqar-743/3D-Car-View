@@ -66,6 +66,7 @@ function Home() {
   };
   return <LandingStory selectedMap={selectedMap} selectedCarName={car.name}
     onChooseMap={(id) => useGame.getState().selectMap(id)} onStartMap={startMap}
+    onExploreMap={(id) => { const game = useGame.getState(); game.selectMap(id); game.navigate('map'); }}
     onGarage={() => useGame.getState().navigate('garage')} />;
 }
 
@@ -198,7 +199,7 @@ function RaceHUD() {
   const { telemetry: data, status, countdown, reaction, cameraMode } = useGame(useShallow((state) => ({ telemetry: state.telemetry, status: state.status, countdown: state.countdown, reaction: state.reaction, cameraMode: state.cameraMode })));
   const map = mapById(useGame((state) => state.selectedMap)); const jungle = map.id === 'jungle';
   const best = useGame((state) => state.bestTimes[gameRecordKey(state.selectedMap, state.selectedCar)]);
-  return <div className={`race-ui race-ui-${status}`} data-hud-layout="right-edge">
+  return <div className={`race-ui race-ui-${status}`} data-hud-layout="split-corners">
     <aside className="race-dashboard" aria-label="Race information">
       <header className="race-header">
         <div className="race-wordmark">WINDWAY<span>{map.name.toUpperCase()}</span></div>
@@ -210,10 +211,6 @@ function RaceHUD() {
       </div>
       <div className="checkpoint-progress" aria-label={`${data.checkpoint} of ${map.mode === 'ascent' ? CHECKPOINTS.length - 1 : CHECKPOINTS.length} gates completed`}><span>GATES</span><div>{Array.from({ length: map.mode === 'ascent' ? CHECKPOINTS.length - 1 : CHECKPOINTS.length }, (_, i) => <i key={i} className={i < data.checkpoint ? 'complete' : i === data.checkpoint ? 'next' : ''} />)}</div><strong>{data.checkpoint}<small> / {map.mode === 'ascent' ? CHECKPOINTS.length - 1 : CHECKPOINTS.length}</small></strong></div>
       {map.mode === 'ascent' && <div className={`winter-drive-info ${data.surface === 'black-ice' ? 'is-ice' : ''}`} role="status"><Art name={data.surface === 'black-ice' ? 'ice-warning' : 'snowflake'} /><span><strong>{data.surface === 'black-ice' ? 'BLACK ICE / EASY INPUTS' : 'PACKED SNOW / EXPERT'}</strong><small>{Math.round(data.altitude ?? START.point.y)} m altitude · {Math.round(Math.min(1, data.progress) * 100)}% to the summit</small></span></div>}
-      <div className="race-dashboard-bottom">
-        <div className="race-minimap"><span>{map.region.toUpperCase()}</span><TrackMap live /><small>FOLLOW THE {map.mode === 'ascent' ? 'CORAL' : jungle ? 'MARIGOLD' : 'ORANGE'} GATE</small></div>
-        <div className="speed-gauge" aria-label={`Speed ${Math.round(data.speed)} kilometers per hour`}><svg viewBox="0 0 160 100" aria-hidden="true"><path d="M20 86a60 60 0 1 1 120 0" fill="none" stroke="#f3f8fb40" strokeWidth="7" strokeLinecap="round" /><path d="M20 86a60 60 0 1 1 120 0" fill="none" stroke={map.theme.accent} strokeWidth="7" strokeLinecap="round" pathLength="100" strokeDasharray={`${Math.min(100, data.speed / 2.1)} 100`} /></svg><strong>{Math.round(data.speed).toString().padStart(2, '0')}</strong><span>KM/H</span><small>{data.boosting ? 'BOOST' : data.airborne ? 'AIRTIME' : data.drifting ? 'DRIFTING' : 'ON THE ROAD'}</small></div>
-      </div>
       <div className="race-tools">
         <button className="hud-button" disabled={status !== 'running'} onClick={() => useGame.getState().resetCar()} aria-label="Recover car to the last checkpoint"><Art name="restart-button" /><span>BACK TO ROAD <kbd>R</kbd></span></button>
         <button className="hud-button" disabled={status !== 'running'} onClick={() => useGame.getState().toggleCamera()} aria-label={`Switch to ${cameraMode === 'chase' ? 'hood' : 'chase'} camera`}><Art name="camera-button" /><span>{cameraMode === 'chase' ? 'CHASE CAM' : 'HOOD CAM'} <kbd>C</kbd></span></button>
@@ -227,6 +224,8 @@ function RaceHUD() {
         {status === 'running' && data.elapsed < 1.5 && <div className="go-message" role="status">GO GET LOST.</div>}
       </div>
     </aside>
+    <section className="race-minimap" aria-label={`${map.name} live roadmap`}><span>{map.region.toUpperCase()}</span><TrackMap live /><small>FOLLOW THE {map.mode === 'ascent' ? 'CORAL' : jungle ? 'MARIGOLD' : 'ORANGE'} GATE</small></section>
+    <section className="speed-gauge" aria-label={`Speed ${Math.round(data.speed)} kilometers per hour`}><strong>{Math.round(data.speed).toString().padStart(2, '0')}</strong><span>KM/H</span><small>{data.boosting ? 'BOOST' : data.airborne ? 'AIRTIME' : data.drifting ? 'DRIFTING' : 'ON THE ROAD'}</small></section>
     {status === 'running' && <div className="touch-controls"><div className="touch-steering"><TouchButton action="left" label="Steer left">←</TouchButton><TouchButton action="right" label="Steer right">→</TouchButton><TouchButton action="handbrake" label="Hold handbrake" className="touch-drift">DRIFT</TouchButton></div><div className="touch-pedals"><TouchButton action="brake" label="Brake or reverse" className="touch-brake">BRAKE</TouchButton><TouchButton action="throttle" label="Accelerate" className="touch-throttle">GO</TouchButton></div></div>}
     {status === 'paused' && <PauseMenu />}
   </div>;

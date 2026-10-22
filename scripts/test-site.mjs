@@ -3,7 +3,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { resolve, sep } from 'node:path';
 import { build } from 'esbuild';
-import { createElement } from 'react';
+import { Children, createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import postcss from 'postcss';
 
@@ -136,7 +136,7 @@ const mapNames = ['The alpine loop', 'Canopy Run', 'Frostbite Ascent'];
 for (const selectedMap of ['alpine', 'jungle', 'snow']) {
   const html = render(LandingStory, {
     selectedMap, selectedCarName: 'McLaren MCL38',
-    onChooseMap: noop, onStartMap: noop, onGarage: noop,
+    onChooseMap: noop, onExploreMap: noop, onStartMap: noop, onGarage: noop,
   });
   check(`${selectedMap} landing keeps all three map stories on the same page`, () => {
     for (const [index, id] of ['alpine', 'jungle', 'snow'].entries()) {
@@ -174,6 +174,33 @@ for (const selectedMap of ['alpine', 'jungle', 'snow']) {
       const selectedName = mapNames[['alpine', 'jungle', 'snow'].indexOf(selectedMap)];
       assert(active[0][1].toLowerCase().includes(selectedName.toLowerCase()), 'Wrong map is marked selected');
     }
+  });
+  check(`${selectedMap} hero opens map details without starting a race`, () => {
+    const calls = [];
+    const tree = LandingStory({
+      selectedMap, selectedCarName: 'McLaren MCL38', onChooseMap: noop, onGarage: noop,
+      onExploreMap: (id) => calls.push(['explore', id]),
+      onStartMap: (id) => calls.push(['start', id]),
+    });
+    function find(node, predicate) {
+      if (!isValidElement(node)) return null;
+      if (predicate(node)) return node;
+      for (const child of Children.toArray(node.props.children)) {
+        const match = find(child, predicate);
+        if (match) return match;
+      }
+      return null;
+    }
+    const hero = find(tree, (node) => node.type === 'button' && node.props.className?.split(' ').includes('wl-hero-drive'));
+    assert(hero, 'Missing primary hero button');
+    assert(renderToStaticMarkup(hero).includes('Explore '), 'Hero must describe the map-details action');
+    hero.props.onClick();
+    assert.deepEqual(calls, [['explore', selectedMap]], 'Hero must explore the selected map, not start driving');
+    const drive = find(tree, (node) => node.type === 'section' && node.props.className === 'wl-last-call');
+    const button = find(drive, (node) => node.type === 'button');
+    assert(button, 'Missing direct-drive shortcut');
+    button.props.onClick();
+    assert.deepEqual(calls, [['explore', selectedMap], ['start', selectedMap]], 'Explicit drive shortcuts should still start the selected road');
   });
 }
 
