@@ -58,6 +58,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   Timer? _watchdog;
   bool _loading = true, _leaving = false, _suspended = false, _ready = false;
   bool _steerBusy = false, _backDialog = false;
+  bool _hasStarted = false;
   String? _error;
   String _status = 'loading';
   int _generation = 0;
@@ -84,6 +85,8 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         _loading = true;
         _error = null;
         _ready = false;
+        _status = 'loading';
+        _steerBusy = false;
       });
     }
     await oldServer?.close();
@@ -115,9 +118,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           _messageQueue = _messageQueue
               .then((_) => _receive(message.message, generation))
               .catchError((Object _) {
-                _fail(
-                  'The game connection was interrupted. Your last saved checkpoint is safe.',
-                );
+                if (generation == _generation) {
+                  _fail(
+                    'The game connection was interrupted. Your last saved checkpoint is safe.',
+                  );
+                }
               });
         },
       );
@@ -151,9 +156,11 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         base.replace(queryParameters: {'native': '1'}),
       );
     } catch (_) {
-      _fail(
-        'The game could not start. Your choices and last checkpoint are still saved.',
-      );
+      if (generation == _generation) {
+        _fail(
+          'The game could not start. Your choices and last checkpoint are still saved.',
+        );
+      }
     }
   }
 
@@ -162,6 +169,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     final controller = _controller, server = _server;
     if (controller == null || server == null) return;
     final current = Uri.tryParse(await controller.currentUrl() ?? '');
+    if (!mounted || generation != _generation) return;
     if (current == null || !server.accepts(current, documentOnly: true)) return;
     dynamic data;
     try {
@@ -179,7 +187,9 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
         }
         _ready = true;
         final config = jsonEncode(widget.model.gameConfig);
-        final resume = jsonEncode(widget.resume ? widget.model.savedRun : null);
+        final resume = jsonEncode(
+          (widget.resume || _hasStarted) ? widget.model.savedRun : null,
+        );
         await controller.runJavaScript(
           'window.WindwayMobile.configure($config); window.WindwayMobile.start({resume:$resume});',
         );
@@ -205,6 +215,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       case 'save':
         if (data['run'] is Map<String, dynamic>) {
           await widget.model.saveRun(data['run'] as Map<String, dynamic>);
+          if (widget.model.savedRun != null) _hasStarted = true;
         }
       case 'finished':
         await _stopTilt();

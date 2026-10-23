@@ -42,13 +42,13 @@ flutter run
 
 The generated `assets/game` folder is intentionally ignored by Git. **Prepare the web bundle before running Flutter**; a fresh clone cannot drive until that build step has completed. If the app reports missing bundled game files, regenerate them with the two prepare scripts above and rebuild the app. It does not silently replace the game with an online page or an empty placeholder.
 
-To make installable APKs covering both 32-bit and 64-bit Android firmware:
+To make one installable APK covering both 32-bit and 64-bit Android firmware:
 
 ```sh
-flutter build apk --release --target-platform android-arm,android-arm64 --split-per-abi
+flutter build apk --release --target-platform android-arm,android-arm64
 ```
 
-Files appear in `mobile/build/app/outputs/flutter-apk/`. Use the `armeabi-v7a` APK for 32-bit firmware or `arm64-v8a` for 64-bit firmware. The GitHub **Build Windway Android demo** workflow runs on this Android branch or on manual request and retains both APKs for 14 days. It does not publish or change GitHub Pages.
+The installer appears at `mobile/build/app/outputs/flutter-apk/app-release.apk`. It includes ARMv7 and ARM64, so you do not need to guess which firmware your Infinix uses. The GitHub **Build Windway Android demo** workflow runs on this Android branch or on manual request and retains the APK for 14 days. It does not publish or change GitHub Pages.
 
 These are **demo APKs using the development signing setup**, not Play Store-ready releases. A real release still needs your private signing key, release configuration, device testing, and store disclosures. Do not commit signing keys or passwords.
 

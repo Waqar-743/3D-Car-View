@@ -3,7 +3,7 @@
 .windway-native .wildway { font-family: 'Trebuchet MS', Arial, sans-serif; }
 .windway-native .race-ui {
   --hud-edge: 8px;
-  --hud-controls-space: 142px;
+  --hud-controls-space: 150px;
   --hud-map-size: 80px;
   --hud-speed-height: 52px;
 }
@@ -31,7 +31,13 @@
 .windway-native .wildway .race-ui .race-notices { gap: 4px; }
 .windway-native .wildway .race-ui .countdown > strong { font-size: 22px; }
 .windway-native .wildway .race-ui .countdown > small { display: none; }
-.windway-native .wildway .race-ui .touch-controls { display: flex; }
+.windway-native .wildway .race-ui .touch-controls { display: flex; position: absolute; left: var(--hud-left); right: var(--hud-right); bottom: var(--hud-bottom); align-items: flex-end; justify-content: space-between; gap: 24px; pointer-events: none; }
+.windway-native .wildway .race-ui .touch-pedals { width: min(136px, calc(50vw - max(var(--hud-left), var(--hud-right)) - 16px)); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: end; }
+.windway-native .wildway .race-ui .touch-button { min-width: 0; width: 100%; min-height: 44px; padding: 8px 4px; border: 1px solid var(--ink); border-radius: 8px; background: var(--paper); color: var(--ink); box-shadow: 0 2px 0 #152a2540; font-size: 22px !important; line-height: 1; font-weight: 600; touch-action: none !important; user-select: none; -webkit-user-select: none; pointer-events: auto; }
+.windway-native .wildway .race-ui .touch-button[aria-pressed=true] { background: var(--hud-accent); box-shadow: none; transform: translateY(1px); }
+.windway-native .wildway .race-ui .touch-drift { font-size: 10px !important; letter-spacing: 1px; }
+.windway-native .wildway .race-ui .touch-brake { min-height: 60px; font-size: 10px !important; }
+.windway-native .wildway .race-ui .touch-throttle { min-height: 94px; font-size: 18px !important; background: var(--hud-accent); }
 .mobile-driver-badge { position: absolute; top: var(--hud-top); left: var(--hud-left); display: grid; grid-template-columns: 32px auto; align-items: center; gap: 4px 6px; max-width: min(144px, calc(50vw - var(--hud-left) - 12px)); padding: 5px; background: var(--hud-panel); border-radius: 8px; pointer-events: auto; }
 .mobile-driver-badge > span { font-size: 8px; letter-spacing: .4px; }
 .mobile-driver-badge > button { grid-column: 1 / -1; min-height: 44px; border: 1px solid var(--hud-rule); border-radius: 5px; background: none; color: var(--hud-text); font-size: 9px; }

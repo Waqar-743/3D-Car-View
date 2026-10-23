@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   android:
-    name: Offline Android APKs
+    name: Offline Android APK
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -68,14 +68,14 @@ jobs:
         working-directory: mobile
         run: flutter test
 
-      - name: Build 32-bit and 64-bit Android demo APKs
+      - name: Build a universal Android demo APK
         working-directory: mobile
-        run: flutter build apk --release --target-platform android-arm,android-arm64 --split-per-abi
+        run: flutter build apk --release --target-platform android-arm,android-arm64
 
-      - name: Upload installable demo APKs
+      - name: Upload installable demo APK
         uses: actions/upload-artifact@v4
         with:
           name: windway-android-demo
-          path: mobile/build/app/outputs/flutter-apk/app-*-release.apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14

@@ -20,9 +20,10 @@ import { mobileResolution } from './mobilePerformance';
 
 function MobileResolution() {
   const setDpr = useThree((state) => state.setDpr);
+  const getRendererState = useThree((state) => state.get);
   const quality = useGame((state) => state.settings.quality);
-  const sample = useRef({ warmup: 0, seconds: 0, frames: 0, dpr: 1, healthy: 0 });
-  useEffect(() => { sample.current = { warmup: 0, seconds: 0, frames: 0, dpr: 1, healthy: 0 }; if (quality === 'auto') setDpr(1); }, [quality, setDpr]);
+  const sample = useRef({ warmup: 0, seconds: 0, frames: 0, healthy: 0 });
+  useEffect(() => { sample.current = { warmup: 0, seconds: 0, frames: 0, healthy: 0 }; if (quality === 'auto') setDpr(1); }, [quality, setDpr]);
   useFrame((_, delta) => {
     const state = useGame.getState(), value = sample.current;
     if (state.settings.quality !== 'auto' || state.status !== 'running') {
@@ -32,9 +33,10 @@ function MobileResolution() {
     if (value.warmup < 4) return;
     value.seconds += delta; value.frames++;
     if (value.seconds < 2) return;
-    const next = mobileResolution(value.dpr, value.frames / value.seconds, value.healthy);
+    const currentDpr = getRendererState().viewport.dpr;
+    const next = mobileResolution(currentDpr, value.frames / value.seconds, value.healthy);
     value.seconds = 0; value.frames = 0; value.healthy = next.healthyWindows;
-    if (next.dpr !== value.dpr) { value.dpr = next.dpr; setDpr(next.dpr); }
+    if (next.dpr !== currentDpr) setDpr(next.dpr);
   });
   return null;
 }
