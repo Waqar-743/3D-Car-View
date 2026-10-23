@@ -12,8 +12,8 @@ export default function CarVisual({ carId, paint, motion, onReady }: { carId: st
   const spin = useRef(0);
   const prepared = useMemo(() => {
     const clone = scene.clone(true);
-    const materials = new Map<THREE.Material, THREE.MeshToonMaterial>();
-    const paints: THREE.MeshToonMaterial[] = [];
+    const materials = new Map<THREE.Material, THREE.MeshStandardMaterial>();
+    const paints: THREE.MeshStandardMaterial[] = [];
     const wheels: { object: THREE.Object3D; base: THREE.Quaternion; front: boolean }[] = [];
     const box = new THREE.Box3().setFromObject(clone); const size = box.getSize(new THREE.Vector3());
     clone.scale.multiplyScalar(5.8 / Math.max(size.x, size.y, size.z));
@@ -27,12 +27,16 @@ export default function CarVisual({ carId, paint, motion, onReady }: { carId: st
         if (!(source instanceof THREE.MeshStandardMaterial)) return source;
         if (!materials.has(source)) {
           const paintable = source.userData.paintable ?? (/paint|halo|mirror|tcam|number/i.test(source.name) && !/decal|alpha/i.test(source.name));
-          const material = new THREE.MeshToonMaterial({
-            color: source.color, map: paintable ? null : source.map,
-            transparent: source.transparent, opacity: source.opacity,
-            alphaTest: source.alphaTest, side: source.side,
-          });
-          if (paintable) paints.push(material);
+          // Keep the delivered livery, normal maps, carbon, glass and tyre detail.
+          // Replacing these with toon materials made the actual game visibly
+          // flatter than the car assets already included in the APK.
+          const material = source.clone();
+          material.envMapIntensity = paintable ? 0.85 : 0.65;
+          if (paintable) {
+            material.metalness = Math.max(0.28, Math.min(0.65, source.metalness));
+            material.roughness = Math.max(0.24, Math.min(0.42, source.roughness));
+            paints.push(material);
+          }
           materials.set(source, material);
         }
         return materials.get(source)!;

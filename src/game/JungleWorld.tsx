@@ -5,6 +5,7 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 import { nearestTrackPoint, seededRandom, trackFrame } from './track';
 import { CheckpointGates, JumpRamp, TrackSurface } from './World';
+import { surfaceTexture } from './surfaceDetail';
 
 type Point = {
   position: [number, number, number];
@@ -188,7 +189,7 @@ function JungleRiver({ low }: { low: boolean }) {
   const current = useRef<THREE.Group>(null);
   useFrame(({ clock }) => { if (current.current) current.current.position.x = clock.elapsedTime * 1.4 % 24; });
   return <>
-    <mesh position={[0, -1.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[1000, 47]} /><meshLambertMaterial color="#3e9290" /></mesh>
+    <mesh position={[0, -1.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[1000, 47]} /><meshStandardMaterial color="#236f6c" roughness={0.3} metalness={0.2} envMapIntensity={0.45} /></mesh>
     <group ref={current}>{Array.from({ length: low ? 18 : 30 }, (_, index) => <mesh key={index} position={[(index % 10) * 45 - 240, -1.025, Math.floor(index / 10) * 13 - 13]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[9 + index % 4, 0.2]} /><meshBasicMaterial color="#a3c9b2" transparent opacity={0.45} />
     </mesh>)}</group>
@@ -221,6 +222,8 @@ function FlyingToucans() {
 }
 
 export default memo(function JungleWorld({ low }: { low: boolean }) {
+  const ground = useMemo(() => { const texture = surfaceTexture('ground'); texture.repeat.set(90, 40); return texture; }, []);
+  useEffect(() => () => ground.dispose(), [ground]);
   // Batch only this selected map's small, actually visible SVG textures. This
   // avoids serial suspense requests without loading either car or the other map.
   const textures = useTexture(sceneArtwork);
@@ -235,7 +238,7 @@ export default memo(function JungleWorld({ low }: { low: boolean }) {
       <CuboidCollider position={[0, -1, 236]} args={[480, 1, 212]} friction={0.9} restitution={0} />
       <CuboidCollider position={[0, -6, 0]} args={[480, 1, 480]} restitution={0} />
     </RigidBody>
-    {[-1, 1].map((side) => <mesh key={side} position={[0, -0.035, side * 236]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[960, 424]} /><meshLambertMaterial color={side > 0 ? '#547a42' : '#436d3d'} /></mesh>)}
+    {[-1, 1].map((side) => <mesh key={side} position={[0, -0.035, side * 236]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[960, 424]} /><meshLambertMaterial map={ground} color={side > 0 ? '#496d35' : '#365c31'} /></mesh>)}
     <DenseJungle low={low} /><JungleRiver low={low} />
     <TrackSurface /><CheckpointGates /><JumpRamp /><StopStation />
     {wildlife.map((animal) => <JungleBillboard key={animal.name} {...animal} />)}

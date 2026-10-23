@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Billboard, useTexture } from '@react-three/drei';
 import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
@@ -9,6 +9,7 @@ import { art } from './config';
 import { useGame } from './store';
 import { BRIDGE_DECK_SEGMENTS, BRIDGE_SUPPORTS, TRACK_BARRIERS } from './trackBarriers';
 import { currentMap } from './maps';
+import { surfaceTexture, worldSurfaceUV } from './surfaceDetail';
 
 const INK = '#30483d';
 export function Instances({ points, kind, color, colors }: { points: { position: [number, number, number]; scale: [number, number, number]; rotation?: number }[]; kind: 'cone' | 'box' | 'rock' | 'sphere'; color: string; colors?: string[] }) {
@@ -26,7 +27,7 @@ export function Instances({ points, kind, color, colors }: { points: { position:
     ref.current.computeBoundingSphere();
   }, [points, colors]);
   return <instancedMesh ref={ref} args={[undefined, undefined, points.length]} castShadow={kind === 'cone'} receiveShadow>
-    {kind === 'cone' ? <coneGeometry args={[1, 1, 7]} /> : kind === 'rock' ? <icosahedronGeometry args={[1, 0]} /> : kind === 'sphere' ? <sphereGeometry args={[1, 8, 6]} /> : <boxGeometry args={[1, 1, 1]} />}
+    {kind === 'cone' ? <coneGeometry args={[1, 1, 9]} /> : kind === 'rock' ? <icosahedronGeometry args={[1, 1]} /> : kind === 'sphere' ? <sphereGeometry args={[1, 10, 7]} /> : <boxGeometry args={[1, 1, 1]} />}
     <meshLambertMaterial color={colors ? '#ffffff' : color} flatShading />
   </instancedMesh>;
 }
@@ -44,7 +45,7 @@ const Forest = memo(({ low }: { low: boolean }) => {
   }, [low]);
   const trunks = useMemo(() => trees.map(({ x, z, size }) => ({ position: [x, size * 2, z] as [number, number, number], scale: [size * 0.7, size * 4, size * 0.7] as [number, number, number] })), [trees]);
   const tops = useMemo(() => trees.flatMap(({ x, z, size }) => [0, 1, 2].map((level) => ({ position: [x, size * (3.5 + level * 1.7), z] as [number, number, number], scale: [size * (3.1 - level * 0.65), size * 4.4, size * (3.1 - level * 0.65)] as [number, number, number] }))), [trees]);
-  return <><Instances points={trunks} kind="box" color="#a88057" /><Instances points={tops} kind="cone" color="#82a783" colors={['#7fa681', '#67927b', '#99b88a']} /></>;
+  return <><Instances points={trunks} kind="box" color="#6e5138" /><Instances points={tops} kind="cone" color="#31563d" colors={['#28533b', '#356348', '#47744b', '#567b4b']} /></>;
 });
 
 const Mountains = memo(() => {
@@ -57,14 +58,14 @@ const Mountains = memo(() => {
   }, []);
   const bodies = useMemo(() => mountains.map((m) => ({ position: [m.x, m.height / 2 - 9, m.z] as [number, number, number], scale: [m.width, m.height, m.width] as [number, number, number] })), [mountains]);
   const peaks = useMemo(() => mountains.map((m) => ({ position: [m.x, m.height * 0.86 - 9, m.z] as [number, number, number], scale: [m.width * 0.29, m.height * 0.29, m.width * 0.29] as [number, number, number] })), [mountains]);
-  return <><Instances points={bodies} kind="cone" color="#8da99b" colors={['#88a69a', '#9db4a4', '#a8bda8']} /><Instances points={peaks} kind="cone" color="#f7f1dd" /></>;
+  return <><Instances points={bodies} kind="cone" color="#5b7d7c" colors={['#496d70', '#628382', '#76918b']} /><Instances points={peaks} kind="cone" color="#cfddd9" /></>;
 });
 
 function River() {
   const lines = useRef<THREE.Group>(null);
   useFrame(({ clock }) => { if (lines.current) lines.current.position.x = (clock.elapsedTime * 2) % 18; });
   return <group>
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.05, 0]} receiveShadow><planeGeometry args={[1000, 47]} /><meshLambertMaterial color="#71b8c5" /></mesh>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.05, 0]} receiveShadow><planeGeometry args={[1000, 47]} /><meshStandardMaterial color="#297d8a" roughness={0.27} metalness={0.25} envMapIntensity={0.55} /></mesh>
     <group ref={lines}>
       {Array.from({ length: 45 }, (_, i) => <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[(i % 15) * 28 - 215, -1.025, Math.floor(i / 15) * 12 - 12]}><planeGeometry args={[7 + (i % 3) * 3, 0.25]} /><meshBasicMaterial color="#b7dfd3" transparent opacity={0.6} /></mesh>)}
     </group>
@@ -137,20 +138,40 @@ export function CheckpointGates() {
 export const TrackSurface = memo(() => {
   const { theme, id } = currentMap;
   const jungle = id === 'jungle', snow = id === 'snow';
-  const road = useMemo(() => ribbonGeometry(ROAD_WIDTH), []);
+  const gl = useThree((state) => state.gl);
+  const asphalt = useMemo(() => surfaceTexture('asphalt', gl.capabilities.getMaxAnisotropy()), [gl]);
+  const road = useMemo(() => worldSurfaceUV(ribbonGeometry(ROAD_WIDTH), 5), []);
   const shoulder = useMemo(() => ribbonGeometry(ROAD_WIDTH + 3, 0, -0.09), []);
   const leftLine = useMemo(() => ribbonGeometry(0.24, -ROAD_WIDTH / 2 + 0.4, 0.035), []);
   const rightLine = useMemo(() => ribbonGeometry(0.24, ROAD_WIDTH / 2 - 0.4, 0.035), []);
   const marks = useMemo(() => TRACK_POINTS.filter((_, i) => i % 4 === 0).map(({ point, yaw }) => ({ position: [point.x, point.y + 0.025, point.z] as [number, number, number], scale: [0.24, 0.025, 2.8] as [number, number, number], rotation: yaw })), []);
+  const kerbs = useMemo(() => [-1, 1].map((side) => {
+    const indexed = ribbonGeometry(0.52, side * (ROAD_WIDTH / 2 - 0.15), 0.04);
+    const geometry = indexed.toNonIndexed(); indexed.dispose();
+    const positions = geometry.attributes.position, colors = new Float32Array(positions.count * 3);
+    const accent = new THREE.Color(currentMap.theme.accent), pale = new THREE.Color('#cbd4ce');
+    let distance = 0, previousX = positions.getX(0), previousZ = positions.getZ(0);
+    for (let i = 0; i < positions.count; i += 6) {
+      const x = positions.getX(i), z = positions.getZ(i);
+      distance += Math.hypot(x - previousX, z - previousZ); previousX = x; previousZ = z;
+      const color = Math.floor(distance / 4) % 2 ? pale : accent;
+      for (let vertex = i; vertex < i + 6; vertex++) color.toArray(colors, vertex * 3);
+    }
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return geometry;
+  }), []);
   const bridgePlanks = useMemo(() => BRIDGE_DECK_SEGMENTS.map(({ position, yaw, halfExtents }) => ({ position, rotation: yaw, scale: halfExtents.map((value) => value * 2) as [number, number, number] })), []);
   const bridgeWalls = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'bridge').map(({ position, yaw, halfExtents }) => ({ position, rotation: yaw, scale: halfExtents.map((value) => value * 2) as [number, number, number] })), []);
   const bridgeCaps = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'bridge').map(({ position, yaw, halfExtents }) => ({ position: [position[0], position[1] + halfExtents[1] + 0.06, position[2]] as [number, number, number], rotation: yaw, scale: [0.72, 0.12, halfExtents[2] * 2] as [number, number, number] })), []);
   const roadsideWalls = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'roadside').map(({ position, yaw, halfExtents }) => ({ position, rotation: yaw, scale: halfExtents.map((value) => value * 2) as [number, number, number] })), []);
   const roadsideStripes = useMemo(() => TRACK_BARRIERS.filter(({ kind }) => kind === 'roadside').map(({ position, yaw, halfExtents }) => ({ position: [position[0], position[1] + 0.1, position[2]] as [number, number, number], rotation: yaw, scale: [0.72, 0.28, halfExtents[2] * 2 + 0.05] as [number, number, number] })), []);
+  useEffect(() => () => asphalt.dispose(), [asphalt]);
+  useEffect(() => () => { road.dispose(); shoulder.dispose(); leftLine.dispose(); rightLine.dispose(); kerbs.forEach((geometry) => geometry.dispose()); }, [road, shoulder, leftLine, rightLine, kerbs]);
   return <>
-    <mesh geometry={shoulder} receiveShadow><meshLambertMaterial color={snow ? '#f3f8fb' : jungle ? '#8b9967' : '#d5c29b'} /></mesh>
-    <RigidBody type="fixed" colliders="trimesh" friction={0.8}><mesh geometry={road} receiveShadow><meshLambertMaterial color={theme.road} side={THREE.DoubleSide} /></mesh></RigidBody>
+    <mesh geometry={shoulder} receiveShadow><meshLambertMaterial color={snow ? '#b9cbd7' : jungle ? '#5e6842' : '#a59065'} /></mesh>
+    <RigidBody type="fixed" colliders="trimesh" friction={0.8}><mesh geometry={road} receiveShadow><meshStandardMaterial color={snow ? '#526779' : jungle ? '#323f3c' : '#3b444b'} map={asphalt} bumpMap={asphalt} bumpScale={0.025} roughness={snow ? 0.62 : 0.91} metalness={0.02} envMapIntensity={0.16} side={THREE.DoubleSide} /></mesh></RigidBody>
     <mesh geometry={leftLine}><meshBasicMaterial color="#f7edcf" /></mesh><mesh geometry={rightLine}><meshBasicMaterial color="#f7edcf" /></mesh>
+    {kerbs.map((geometry, index) => <mesh key={index} geometry={geometry} receiveShadow><meshLambertMaterial vertexColors /></mesh>)}
     <Instances points={marks} kind="box" color={snow ? '#e9f4f8' : jungle ? '#d6e8a7' : '#f4d477'} />
     <Instances points={bridgePlanks} kind="box" color={jungle ? '#8b9564' : '#b98e60'} />
     <Instances points={bridgeWalls} kind="box" color={jungle ? '#287451' : '#a67d53'} />
@@ -189,6 +210,8 @@ export function JumpRamp() {
 }
 
 export default memo(function World({ low }: { low: boolean }) {
+  const ground = useMemo(() => { const texture = surfaceTexture('ground'); texture.repeat.set(85, 38); return texture; }, []);
+  useEffect(() => () => ground.dispose(), [ground]);
   const rocks = useMemo(() => {
     const random = seededRandom(418); const points = [];
     for (let i = 0; i < 100; i++) { const x = (random() - 0.5) * 570; const z = (random() - 0.5) * 490; const s = 1 + random() * 3; if (Math.abs(z) > 32 && nearestTrackPoint(x, z).distance > 16) points.push({ position: [x, s * 0.3, z] as [number, number, number], scale: [s, s * 0.65, s * 0.8] as [number, number, number], rotation: random() * Math.PI }); }
@@ -199,13 +222,11 @@ export default memo(function World({ low }: { low: boolean }) {
       <CuboidCollider position={[0, -1, -236]} args={[480, 1, 212]} friction={0.9} /><CuboidCollider position={[0, -1, 236]} args={[480, 1, 212]} friction={0.9} />
       <CuboidCollider position={[0, -6, 0]} args={[480, 1, 480]} />
     </RigidBody>
-    {[-1, 1].map((side) => <mesh key={side} position={[0, -0.035, side * 236]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[960, 424]} /><meshLambertMaterial color={side > 0 ? '#b3cc92' : '#a5c18d'} /></mesh>)}
-    <Mountains /><Forest low={low} /><Instances points={rocks} kind="rock" color="#9eb29e" />
+    {[-1, 1].map((side) => <mesh key={side} position={[0, -0.035, side * 236]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow><planeGeometry args={[960, 424]} /><meshLambertMaterial map={ground} color={side > 0 ? '#7b984f' : '#66864b'} /></mesh>)}
+    <Mountains /><Forest low={low} /><Instances points={rocks} kind="rock" color="#6d8176" colors={['#5b706b', '#839080', '#778578']} />
     <River /><TrackSurface /><CheckpointGates /><GarageBuilding /><JumpRamp />
     <Goat position={[72, 0, 147]} rotation={-1} /><Goat position={[-81, 0, -139]} rotation={1.8} />
     <Eagle /><Eagle offset={2.5} />
     <CharacterSign name="wild-haired-driver" position={[14, 0, 139]} /><CharacterSign name="crying-driver" position={[-150, 0, 48]} />
-    <mesh position={[-220, 155, -200]}><sphereGeometry args={[20, 16, 12]} /><meshBasicMaterial color="#f7dc8a" /></mesh>
-    {[-1, 1].flatMap((side) => [0, 1, 2].map((i) => <group key={`${side}-${i}`} position={[side * (90 + i * 70), 64 + i * 8, -180 + i * 62]}>{[-1, 0, 1].map((x) => <mesh key={x} position={[x * 7, x === 0 ? 2 : 0, 0]} scale={[12, 5 + (x === 0 ? 2 : 0), 7]}><sphereGeometry args={[1, 10, 6]} /><meshLambertMaterial color="#fff8e6" flatShading /></mesh>)}</group>))}
   </>;
 });

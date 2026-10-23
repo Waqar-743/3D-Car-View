@@ -17,13 +17,14 @@ import ViewerErrorBoundary from '../components/PanoramicViewer/ViewerErrorBounda
 import TrackLoader from './TrackLoader';
 import { isNativeGame } from './mobileBridge';
 import { mobileResolution } from './mobilePerformance';
+import SceneAtmosphere from './SceneAtmosphere';
 
-function MobileResolution() {
+function MobileResolution({ maximum }: { maximum: number }) {
   const setDpr = useThree((state) => state.setDpr);
   const getRendererState = useThree((state) => state.get);
   const quality = useGame((state) => state.settings.quality);
   const sample = useRef({ warmup: 0, seconds: 0, frames: 0, healthy: 0 });
-  useEffect(() => { sample.current = { warmup: 0, seconds: 0, frames: 0, healthy: 0 }; if (quality === 'auto') setDpr(1); }, [quality, setDpr]);
+  useEffect(() => { sample.current = { warmup: 0, seconds: 0, frames: 0, healthy: 0 }; if (quality === 'auto') setDpr(maximum); }, [quality, setDpr, maximum]);
   useFrame((_, delta) => {
     const state = useGame.getState(), value = sample.current;
     if (state.settings.quality !== 'auto' || state.status !== 'running') {
@@ -34,14 +35,14 @@ function MobileResolution() {
     value.seconds += delta; value.frames++;
     if (value.seconds < 2) return;
     const currentDpr = getRendererState().viewport.dpr;
-    const next = mobileResolution(currentDpr, value.frames / value.seconds, value.healthy);
+    const next = mobileResolution(currentDpr, value.frames / value.seconds, value.healthy, maximum, 0.8);
     value.seconds = 0; value.frames = 0; value.healthy = next.healthyWindows;
     if (next.dpr !== currentDpr) setDpr(next.dpr);
   });
   return null;
 }
 
-function Sunlight({ shadows }: { shadows: boolean }) {
+function Sunlight({ shadows, shadowMapSize }: { shadows: boolean; shadowMapSize: number }) {
   const light = useRef<THREE.DirectionalLight>(null);
   const target = useMemo(() => new THREE.Object3D(), []);
   useFrame(() => {
@@ -51,11 +52,12 @@ function Sunlight({ shadows }: { shadows: boolean }) {
     light.current?.position.set(p.x + 35, p.y + 65, p.z + 24);
   });
   return <>
-    <hemisphereLight args={[currentMap.id === 'snow' ? '#f3f8fb' : '#fff9e5', currentMap.id === 'snow' ? '#829db0' : currentMap.id === 'jungle' ? '#4e825e' : '#84a57a', 1.8]} />
-    <directionalLight ref={light} target={target} intensity={2.4} castShadow={shadows}
-      shadow-mapSize={[1024, 1024]} shadow-camera-left={-28} shadow-camera-right={28}
+    <hemisphereLight args={['#afcce5', currentMap.id === 'snow' ? '#536d87' : currentMap.id === 'jungle' ? '#254733' : '#3f5b36', 0.8]} />
+    <directionalLight position={[-30, 18, -50]} color="#87b3d5" intensity={0.35} />
+    <directionalLight ref={light} target={target} color="#fff1d0" intensity={2.8} castShadow={shadows}
+      shadow-mapSize={[shadowMapSize, shadowMapSize]} shadow-camera-left={-28} shadow-camera-right={28}
       shadow-camera-top={28} shadow-camera-bottom={-28} shadow-camera-near={1} shadow-camera-far={150}
-      shadow-bias={-0.0002} shadow-normalBias={0.04} />
+      shadow-bias={-0.0002} shadow-normalBias={0.04} shadow-radius={2} />
     <primitive object={target} />
   </>;
 }
@@ -111,18 +113,20 @@ export default function GameScene({ attempt }: { attempt: number }) {
   const selectedMap = useGame((state) => state.selectedMap); const map = mapById(selectedMap);
   const device = useMemo(getRenderQuality, []);
   const native = isNativeGame();
-  const low = quality === 'low' || (quality === 'auto' && (native || device.dpr[1] === 1));
+  const low = quality === 'low' || (quality === 'auto' && device.dpr[1] <= 1.15);
+  const shadows = quality === 'high' || (quality === 'auto' && device.shadows);
+  const maximumDpr = quality === 'high' ? 1.5 : quality === 'low' ? 1 : device.dpr[1];
   const racing = page === 'race' || page === 'results' || (['settings', 'howto'].includes(page) && returnPage === 'race' && status === 'paused');
   const error = useCallback((issue: Error) => useGame.getState().setError(issue.message || 'The valley could not load. Please try again.'), []);
   return <><ViewerErrorBoundary key={`${attempt}-${selectedMap}`} resetKey={`${attempt}-${selectedMap}`} onError={error}>
     <Canvas
-      shadows={!low} dpr={low ? 1 : [1, 1.5]}
+      shadows={shadows} dpr={quality === 'low' ? 1 : [1, maximumDpr]}
       frameloop={['paused', 'recovering'].includes(status) || ['map', 'settings', 'howto', 'results'].includes(page) ? 'demand' : 'always'}
       camera={{ fov: 42, near: 0.1, far: map.id === 'snow' ? 4500 : 900, position: [START.point.x + 12, START.point.y + 7, START.point.z + 17] }}
-      gl={{ antialias: !low, powerPreference: 'high-performance', stencil: false }}
+      gl={{ antialias: quality === 'high' || device.antialias, powerPreference: 'high-performance', stencil: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.95 }}
     >
-      <color attach="background" args={[map.theme.sky]} /><fog attach="fog" args={[map.theme.sky, map.id === 'snow' ? 300 : map.id === 'jungle' ? 110 : 230, map.id === 'snow' ? 1700 : map.id === 'jungle' ? 410 : 650]} />
-      <ContextMonitor />{native && <MobileResolution />}<Sunlight shadows={!low} />
+      <SceneAtmosphere mapId={map.id} />
+      <ContextMonitor />{native && <MobileResolution maximum={maximumDpr} />}<Sunlight shadows={shadows} shadowMapSize={quality === 'high' ? 1024 : device.shadowMapSize} />
       <Suspense fallback={null}>
         <Physics gravity={[0, -18, 0]} timeStep={1 / 60} paused={status !== 'running'} interpolate>
           {map.id === 'snow' ? <SnowWorld low={low} /> : map.id === 'jungle' ? <JungleWorld low={low} /> : <World low={low} />}
