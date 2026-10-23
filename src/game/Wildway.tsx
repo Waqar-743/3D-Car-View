@@ -11,8 +11,11 @@ import type { DrivingInput } from './driving';
 import ViewerErrorBoundary from '../components/PanoramicViewer/ViewerErrorBoundary';
 import TrackLoader from './TrackLoader';
 import LandingStory from './LandingStory';
+import MobileTouchControls, { MobileDriverBadge } from './MobileTouchControls';
+import { installMobileBridge, isNativeGame } from './mobileBridge';
 import './wildway.css';
 import './race-hud.css';
+import './mobile-game.css';
 
 const GameScene = lazy(() => import('./GameScene'));
 
@@ -187,7 +190,7 @@ function Results() {
   </section></main>;
 }
 
-function TouchButton({ action, label, children, className = '' }: { action: keyof DrivingInput; label: string; children: React.ReactNode; className?: string }) {
+function TouchButton({ action, label, children, className = '' }: { action: Exclude<keyof DrivingInput, 'steering'>; label: string; children: React.ReactNode; className?: string }) {
   const [held, setHeld] = useState(false);
   const release = () => { drivingInput[action] = false; setHeld(false); };
   return <button className={`touch-button ${className}`} aria-label={label} aria-pressed={held} onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); drivingInput[action] = true; setHeld(true); }} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release} onContextMenu={(event) => event.preventDefault()}>{children}</button>;
@@ -200,6 +203,7 @@ function RaceHUD() {
   const map = mapById(useGame((state) => state.selectedMap)); const jungle = map.id === 'jungle';
   const best = useGame((state) => state.bestTimes[gameRecordKey(state.selectedMap, state.selectedCar)]);
   return <div className={`race-ui race-ui-${status}`} data-hud-layout="split-corners">
+    {isNativeGame() && <MobileDriverBadge />}
     <aside className="race-dashboard" aria-label="Race information">
       <header className="race-header">
         <div className="race-wordmark">WINDWAY<span>{map.name.toUpperCase()}</span></div>
@@ -226,7 +230,7 @@ function RaceHUD() {
     </aside>
     <section className="race-minimap" aria-label={`${map.name} live roadmap`}><span>{map.region.toUpperCase()}</span><TrackMap live /><small>FOLLOW THE {map.mode === 'ascent' ? 'CORAL' : jungle ? 'MARIGOLD' : 'ORANGE'} GATE</small></section>
     <section className="speed-gauge" aria-label={`Speed ${Math.round(data.speed)} kilometers per hour`}><strong>{Math.round(data.speed).toString().padStart(2, '0')}</strong><span>KM/H</span><small>{data.boosting ? 'BOOST' : data.airborne ? 'AIRTIME' : data.drifting ? 'DRIFTING' : 'ON THE ROAD'}</small></section>
-    {status === 'running' && <div className="touch-controls"><div className="touch-steering"><TouchButton action="left" label="Steer left">←</TouchButton><TouchButton action="right" label="Steer right">→</TouchButton><TouchButton action="handbrake" label="Hold handbrake" className="touch-drift">DRIFT</TouchButton></div><div className="touch-pedals"><TouchButton action="brake" label="Brake or reverse" className="touch-brake">BRAKE</TouchButton><TouchButton action="throttle" label="Accelerate" className="touch-throttle">GO</TouchButton></div></div>}
+    {status === 'running' && (isNativeGame() ? <MobileTouchControls /> : <div className="touch-controls"><div className="touch-steering"><TouchButton action="left" label="Steer left">←</TouchButton><TouchButton action="right" label="Steer right">→</TouchButton><TouchButton action="handbrake" label="Hold handbrake" className="touch-drift">DRIFT</TouchButton></div><div className="touch-pedals"><TouchButton action="brake" label="Brake or reverse" className="touch-brake">BRAKE</TouchButton><TouchButton action="throttle" label="Accelerate" className="touch-throttle">GO</TouchButton></div></div>)}
     {status === 'paused' && <PauseMenu />}
   </div>;
 }
@@ -238,6 +242,7 @@ export default function Windway() {
   const [attempt, setAttempt] = useState(0);
   const racing = page === 'race' || page === 'results';
   useEffect(() => () => gameAudio.close(), []);
+  useEffect(() => installMobileBridge(), []);
   useEffect(() => installDrivingInput(() => { const state = useGame.getState(); if (state.page === 'race') { if (state.status === 'paused') state.resume(); else state.pause(); } }, () => useGame.getState().resetCar(), () => useGame.getState().toggleCamera(), () => { const state = useGame.getState(); return state.page === 'race' && ['running', 'countdown'].includes(state.status); }), []);
   useEffect(() => { if (status !== 'running') { clearInput(); gameAudio.stop(); } else if (document.visibilityState === 'hidden') useGame.getState().pause(); }, [status]);
   useEffect(() => {

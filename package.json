@@ -16,7 +16,13 @@
     "test:hud": "node --max-semi-space-size=4 scripts/test-hud-layout.mjs",
     "test:site": "node --max-semi-space-size=4 scripts/test-site.mjs",
     "test:build": "node --max-semi-space-size=4 scripts/test-build.mjs",
-    "optimize:models": "node scripts/optimize-models.mjs"
+    "optimize:models": "node scripts/optimize-models.mjs",
+    "android:prepare:art": "node --max-semi-space-size=4 scripts/prepare-android-assets.mjs",
+    "android:prepare:web": "node --max-old-space-size=512 --max-semi-space-size=1 scripts/prepare-android-web.mjs",
+    "android:prepare": "npm run android:prepare:art && npm run android:prepare:web",
+    "test:android:assets": "node --max-semi-space-size=4 scripts/test-android-assets.mjs",
+    "test:android:web": "node --max-semi-space-size=4 scripts/test-android-web.mjs",
+    "test:android:bridge": "node --max-semi-space-size=4 scripts/test-mobile-bridge.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.92.7",

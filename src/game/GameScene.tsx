@@ -15,6 +15,29 @@ import { vehicleFrame } from './runtime';
 import { getRenderQuality } from '../utils/renderQuality';
 import ViewerErrorBoundary from '../components/PanoramicViewer/ViewerErrorBoundary';
 import TrackLoader from './TrackLoader';
+import { isNativeGame } from './mobileBridge';
+import { mobileResolution } from './mobilePerformance';
+
+function MobileResolution() {
+  const setDpr = useThree((state) => state.setDpr);
+  const quality = useGame((state) => state.settings.quality);
+  const sample = useRef({ warmup: 0, seconds: 0, frames: 0, dpr: 1, healthy: 0 });
+  useEffect(() => { sample.current = { warmup: 0, seconds: 0, frames: 0, dpr: 1, healthy: 0 }; if (quality === 'auto') setDpr(1); }, [quality, setDpr]);
+  useFrame((_, delta) => {
+    const state = useGame.getState(), value = sample.current;
+    if (state.settings.quality !== 'auto' || state.status !== 'running') {
+      value.seconds = 0; value.frames = 0; return;
+    }
+    value.warmup += delta;
+    if (value.warmup < 4) return;
+    value.seconds += delta; value.frames++;
+    if (value.seconds < 2) return;
+    const next = mobileResolution(value.dpr, value.frames / value.seconds, value.healthy);
+    value.seconds = 0; value.frames = 0; value.healthy = next.healthyWindows;
+    if (next.dpr !== value.dpr) { value.dpr = next.dpr; setDpr(next.dpr); }
+  });
+  return null;
+}
 
 function Sunlight({ shadows }: { shadows: boolean }) {
   const light = useRef<THREE.DirectionalLight>(null);
@@ -85,7 +108,8 @@ export default function GameScene({ attempt }: { attempt: number }) {
   const quality = useGame((state) => state.settings.quality);
   const selectedMap = useGame((state) => state.selectedMap); const map = mapById(selectedMap);
   const device = useMemo(getRenderQuality, []);
-  const low = quality === 'low' || (quality === 'auto' && device.dpr[1] === 1);
+  const native = isNativeGame();
+  const low = quality === 'low' || (quality === 'auto' && (native || device.dpr[1] === 1));
   const racing = page === 'race' || page === 'results' || (['settings', 'howto'].includes(page) && returnPage === 'race' && status === 'paused');
   const error = useCallback((issue: Error) => useGame.getState().setError(issue.message || 'The valley could not load. Please try again.'), []);
   return <><ViewerErrorBoundary key={`${attempt}-${selectedMap}`} resetKey={`${attempt}-${selectedMap}`} onError={error}>
@@ -96,7 +120,7 @@ export default function GameScene({ attempt }: { attempt: number }) {
       gl={{ antialias: !low, powerPreference: 'high-performance', stencil: false }}
     >
       <color attach="background" args={[map.theme.sky]} /><fog attach="fog" args={[map.theme.sky, map.id === 'snow' ? 300 : map.id === 'jungle' ? 110 : 230, map.id === 'snow' ? 1700 : map.id === 'jungle' ? 410 : 650]} />
-      <ContextMonitor /><Sunlight shadows={!low} />
+      <ContextMonitor />{native && <MobileResolution />}<Sunlight shadows={!low} />
       <Suspense fallback={null}>
         <Physics gravity={[0, -18, 0]} timeStep={1 / 60} paused={status !== 'running'} interpolate>
           {map.id === 'snow' ? <SnowWorld low={low} /> : map.id === 'jungle' ? <JungleWorld low={low} /> : <World low={low} />}

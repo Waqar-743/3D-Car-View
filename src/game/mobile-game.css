@@ -1,0 +1,52 @@
+/* Android-only overrides. The published website keeps its existing HUD. */
+.windway-native { overscroll-behavior: none; touch-action: none; }
+.windway-native .wildway { font-family: 'Trebuchet MS', Arial, sans-serif; }
+.windway-native .race-ui {
+  --hud-edge: 8px;
+  --hud-controls-space: 142px;
+  --hud-map-size: 80px;
+  --hud-speed-height: 52px;
+}
+.windway-native .wildway .race-ui .race-dashboard { width: min(160px, calc(50vw - var(--hud-right) - 12px)); padding: 6px; gap: 4px; }
+.windway-native .wildway .race-ui .race-wordmark,
+.windway-native .wildway .race-ui .lap-clock > small,
+.windway-native .wildway .race-ui .race-reaction,
+.windway-native .wildway .race-ui .checkpoint-progress > div,
+.windway-native .wildway .race-ui .race-minimap > span { display: none; }
+.windway-native .wildway .race-ui .lap-clock > strong { font-size: 18px; margin: 2px 0; }
+.windway-native .wildway .race-ui .lap-clock > span { font-size: 8px; }
+.windway-native .wildway .race-ui .lap-counter > b { font-size: 8px; }
+.windway-native .wildway .race-ui .race-header { display: contents; }
+.windway-native .wildway .race-ui .race-stats { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.windway-native .wildway .race-ui .checkpoint-progress { padding: 3px 0; grid-template-columns: 1fr auto; }
+.windway-native .wildway .race-ui .winter-drive-info { padding: 3px; }
+.windway-native .wildway .race-ui .winter-drive-info strong { font-size: 8px; }
+.windway-native .wildway .race-ui .winter-drive-info small { font-size: 8px; }
+.windway-native .wildway .race-ui .race-minimap { grid-template-rows: minmax(0, 1fr); padding: 4px; }
+.windway-native .wildway .race-ui .speed-gauge { width: 72px; padding: 3px; }
+.windway-native .wildway .race-ui .speed-gauge > strong { font-size: 24px; }
+.windway-native .wildway .race-ui .speed-gauge > small { display: none; }
+.windway-native .wildway .race-ui .speed-gauge > span { font-size: 8px; }
+.windway-native .wildway .race-ui .race-tools .hud-button { min-height: 44px; }
+.windway-native .wildway .race-ui .race-notices { gap: 4px; }
+.windway-native .wildway .race-ui .countdown > strong { font-size: 22px; }
+.windway-native .wildway .race-ui .countdown > small { display: none; }
+.windway-native .wildway .race-ui .touch-controls { display: flex; }
+.mobile-driver-badge { position: absolute; top: var(--hud-top); left: var(--hud-left); display: grid; grid-template-columns: 32px auto; align-items: center; gap: 4px 6px; max-width: min(144px, calc(50vw - var(--hud-left) - 12px)); padding: 5px; background: var(--hud-panel); border-radius: 8px; pointer-events: auto; }
+.mobile-driver-badge > span { font-size: 8px; letter-spacing: .4px; }
+.mobile-driver-badge > button { grid-column: 1 / -1; min-height: 44px; border: 1px solid var(--hud-rule); border-radius: 5px; background: none; color: var(--hud-text); font-size: 9px; }
+.mobile-driver-badge > button:focus-visible { outline: 2px solid var(--hud-accent); outline-offset: 2px; }
+.mobile-steering-cluster { display: flex; flex-direction: column; align-items: stretch; gap: 6px; width: 124px; pointer-events: auto; }
+.mobile-steering-cluster .touch-drift { min-height: 44px; }
+.mobile-arrow-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mobile-arrow-controls .touch-button { min-height: 64px !important; }
+.mobile-wheel { height: 94px; width: 94px; align-self: center; touch-action: none; outline-offset: 4px; }
+.mobile-wheel:focus-visible { outline: 2px solid var(--hud-accent); border-radius: 50%; }
+.mobile-wheel > svg { width: 100%; height: 100%; pointer-events: none; }
+.mobile-tilt-controls { display: grid; gap: 6px; }
+.mobile-tilt-controls > span { font-size: 9px; text-align: center; color: var(--hud-text); background: var(--hud-panel); padding: 5px; border-radius: 4px; }
+.wildway .race-ui .mobile-tilt-controls > .touch-button { font-size: 9px !important; min-height: 48px; }
+@media (max-height: 360px) {
+  .mobile-driver-badge { grid-template-columns: 1fr; padding: 4px; }
+  .mobile-driver-badge > img, .mobile-driver-badge > span { display: none; }
+}
