@@ -121,6 +121,23 @@ export function CheckpointGates() {
   const { theme, id } = currentMap;
   const gateColor = (index: number, active: boolean) => id === 'snow' ? (active ? theme.accent : index === CHECKPOINTS.length - 1 ? '#d47762' : '#7aa7bf') : index === 0 ? (id === 'jungle' ? '#d97d73' : '#f7d674') : active ? theme.accent : (id === 'jungle' ? '#86b960' : '#b8c7a0');
   const gateWidth = ROAD_WIDTH + 2.2;
+  const overheads = useRef<(THREE.Group | null)[]>([]);
+  const cameraWorld = useMemo(() => new THREE.Vector3(), []);
+  const cameraLocal = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ camera }) => {
+    camera.getWorldPosition(cameraWorld);
+    for (const overhead of overheads.current) {
+      if (!overhead) continue;
+      overhead.worldToLocal(cameraLocal.copy(cameraWorld));
+      // Distance to the actual bar bounds, including the finish checker panels.
+      // A checkpoint respawn can put the chase camera just behind this beam;
+      // at that distance it would cover the racing line across the entire view.
+      const dx = Math.max(0, Math.abs(cameraLocal.x) - (gateWidth + 0.5) / 2);
+      const dy = Math.max(0, Math.abs(cameraLocal.y) - 0.375);
+      const dz = Math.max(0, -0.35 - cameraLocal.z, cameraLocal.z - 0.37);
+      overhead.visible = dx * dx + dy * dy + dz * dz > 16;
+    }
+  });
   return <group>{CHECKPOINTS.map(({ point, yaw }, index) => {
     const active = index === (TRACK_CLOSED ? (checkpoint + 1) % CHECKPOINTS.length : Math.min(CHECKPOINTS.length - 1, checkpoint + 1));
     const finish = TRACK_CLOSED ? index === 0 : index === CHECKPOINTS.length - 1;
@@ -129,8 +146,10 @@ export function CheckpointGates() {
         <mesh position={[0, 2.7, 0]} castShadow><boxGeometry args={[0.55, 5.4, 0.7]} /><meshLambertMaterial color={gateColor(index, active)} /></mesh>
         {[1.4, 3.6].map((y) => <mesh key={y} position={[0, y, 0.02]}><boxGeometry args={[0.58, 0.65, 0.73]} /><meshLambertMaterial color="#fff7e8" /></mesh>)}
       </group>)}
-      <mesh position={[0, 5.4, 0]} castShadow><boxGeometry args={[gateWidth + 0.5, 0.75, 0.7]} /><meshLambertMaterial color={gateColor(index, active)} /></mesh>
-      {finish && Array.from({ length: 16 }, (_, i) => <mesh key={i} position={[(i - 7.5) * gateWidth / 16, 5.42, 0.37]}><planeGeometry args={[gateWidth / 16 - 0.03, 0.55]} /><meshBasicMaterial color={i % 2 ? theme.paper : theme.ink} side={THREE.DoubleSide} /></mesh>)}
+      <group ref={(group) => { overheads.current[index] = group; }} position={[0, 5.4, 0]}>
+        <mesh castShadow><boxGeometry args={[gateWidth + 0.5, 0.75, 0.7]} /><meshLambertMaterial color={gateColor(index, active)} /></mesh>
+        {finish && Array.from({ length: 16 }, (_, i) => <mesh key={i} position={[(i - 7.5) * gateWidth / 16, 0.02, 0.37]}><planeGeometry args={[gateWidth / 16 - 0.03, 0.55]} /><meshBasicMaterial color={i % 2 ? theme.paper : theme.ink} side={THREE.DoubleSide} /></mesh>)}
+      </group>
     </group>;
   })}</group>;
 }
