@@ -6,7 +6,9 @@ Made by [Waqar Ahmed](https://github.com/Waqar-743). Source: [WindWay](https://g
 
 ## What is inside?
 
-Flutter handles the animated welcome screen, Start / Continue, characters, settings, and the driving guide. The actual 3D driving game is the existing **Three.js / Rapier game bundled into a local Android WebView**. This is not a rewrite into a native Dart 3D engine, and no hosted website is required to race.
+Flutter provides a full-screen landscape game lobby, Start / Continue, characters, settings, and the driving guide. The actual 3D driving game is the existing **Three.js / Rapier game bundled into a local Android WebView**. Everything needed to drive is included in the APK.
+
+Android 1.1.0 replaces the pale panels with a dark scenic lobby and translucent controls. Tap **START DRIVE** to enter the selected road immediately. **Pause** opens Resume, Restart, and Stop drive. The **STOP** button at the top-left saves your last earned checkpoint and returns to the garage in one tap. Android Back also pauses the drive. Continue resumes at the saved gate; releasing a pedal or returning from the background never holds the accelerator for you.
 
 - Alpine: the original winding valley loop, bridges, and boost ramp.
 - Canopy Run: a dense jungle circuit, two laps, and the familiar wildlife.
@@ -17,9 +19,11 @@ Flutter handles the animated welcome screen, Start / Continue, characters, setti
 
 Choose arrow buttons, a virtual steering wheel, or **phone tilt**. Tilt means gently rotating the phone left and right; do not bend, stretch, or shake the device. Settings also include camera and performance choices. The first version is single-player, not an online multiplayer game.
 
-## Smooth comes before shiny
+## Graphics
 
-The Infinix Hot 10 is the target for the conservative automatic graphics defaults. The game uses the optimized delivery car models, caps rendering resolution, and reduces costly effects. Automatic graphics can lower resolution if frames slow down. Low graphics and calmer effects are useful when the device is warm or battery is low.
+The car retains its original livery textures, carbon detail and reflective materials. Each road has its own blue or teal sky, warm sunlight, cool fill light, textured road and terrain, continuous kerbs, and reflective water or ice. The sky and surface textures are generated locally, so the graphics need no online downloads.
+
+Automatic graphics considers memory and CPU hints instead of treating every phone as a low-end device. A 4 GB device starts with lower scenery density, a 1.15× rendering cap, antialiasing and a 512-pixel shadow map; devices reporting 2 GB or fewer resources omit shadows and antialiasing. Faster phones can render up to 1.35× automatically; High allows up to 1.5×. After a warm-up, Auto reduces rendering resolution under sustained load to a floor of 0.8× and raises it only after several healthy samples. Low and calmer effects remain available. These caps describe rendering resolution relative to logical screen pixels.
 
 Actual frame rate, thermal behavior, touch feel, and tilt calibration still need testing on a physical phone. There is no guaranteed 60 FPS claim. An emulator or a successful APK build does not establish hardware performance.
 
@@ -33,6 +37,7 @@ node scripts/prepare-android-assets.mjs
 node scripts/prepare-android-web.mjs
 node scripts/test-android-assets.mjs
 node scripts/test-android-web.mjs
+npm run test:android:bridge
 cd mobile
 flutter pub get
 flutter analyze
@@ -48,7 +53,9 @@ To make one installable APK covering both 32-bit and 64-bit Android firmware:
 flutter build apk --release --target-platform android-arm,android-arm64
 ```
 
-The installer appears at `mobile/build/app/outputs/flutter-apk/app-release.apk`. It includes ARMv7 and ARM64, so you do not need to guess which firmware your Infinix uses. The GitHub **Build Windway Android demo** workflow runs on this Android branch or on manual request and retains the APK for 14 days. It does not publish or change GitHub Pages.
+The installer appears at `mobile/build/app/outputs/flutter-apk/app-release.apk`. It includes ARMv7 and ARM64, so you do not need to guess which firmware your Infinix uses. Download the shared installer from the [Android 1.1.0 release](https://github.com/Waqar-743/WindWay/releases/tag/v1.1.0-android-demo.1). The GitHub **Build Windway Android demo** workflow also runs on this Android branch or on manual request and retains its build artifact for 14 days.
+
+The automated checks cover checkpoint save and stop ordering, pause/resume during countdown and recovery, restart and retry, adaptive graphics limits, and landscape control clearance and contrast. Native widget tests cover immediate Start, preferences, and responsive menus. Visual checks use the bundled game in a landscape browser preview; they do not establish phone GPU performance.
 
 These are **demo APKs using the development signing setup**, not Play Store-ready releases. A real release still needs your private signing key, release configuration, device testing, and store disclosures. Do not commit signing keys or passwords.
 
