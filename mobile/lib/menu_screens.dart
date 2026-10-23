@@ -98,28 +98,38 @@ class MenuPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    extendBodyBehindAppBar: true,
     appBar: AppBar(title: Text(title), actions: actions),
-    body: SafeArea(
-      top: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1120),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (subtitle != null) ...[
-                  Text(subtitle!, style: Theme.of(context).textTheme.bodyLarge),
-                  const SizedBox(height: 24),
-                ],
-                child,
-              ],
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        const DrivingBackdrop(),
+        const ColoredBox(color: Color(0xAC0B141B)),
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 72, 20, 28),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1120),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (subtitle != null) ...[
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    child,
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     ),
   );
 }
@@ -131,133 +141,175 @@ class StarterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: model,
-    builder: (context, _) => MenuPage(
-      title: 'WINDWAY',
-      actions: [
-        IconButton(
-          tooltip: 'Options',
-          onPressed: () => _open(context, OptionsScreen(model: model)),
-          icon: const Icon(Icons.tune_rounded),
-        ),
-        const SizedBox(width: 8),
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    builder: (context, _) => Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact =
-                  constraints.maxWidth >= 700 &&
-                  MediaQuery.sizeOf(context).height < 500;
-              final intro = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!compact) ...[
-                    const Eyebrow('A LITTLE CAR. A LONG WAY HOME.'),
-                    const SizedBox(height: 12),
-                  ],
-                  Text(
-                    'Take the\nscenic detour.',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontSize: compact ? 32 : 36,
-                    ),
-                  ),
-                  SizedBox(height: compact ? 8 : 14),
-                  Text(
-                    compact
-                        ? 'Three roads. Two cars. Find your own way.'
-                        : 'Three roads. Two cars. Just you, the next bend, and a very questionable shortcut.',
-                  ),
-                  SizedBox(height: compact ? 12 : 22),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
+          DrivingBackdrop(road: model.selectedMap, showCar: true),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, bounds) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: bounds.maxHeight - 26),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      FilledButton.icon(
-                        key: const ValueKey('start-button'),
-                        onPressed: () =>
-                            _open(context, RoadsScreen(model: model)),
-                        icon: const Icon(Icons.arrow_forward_rounded),
-                        label: const Text('Start a drive'),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.route_rounded,
+                            size: 24,
+                            color: orange,
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'WINDWAY',
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 3,
+                              color: pine,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (bounds.maxWidth > 580)
+                            const Text(
+                              'OFFLINE DRIVE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                letterSpacing: 1.8,
+                                color: muted,
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            tooltip: 'Options',
+                            onPressed: () =>
+                                _open(context, OptionsScreen(model: model)),
+                            icon: const Icon(Icons.tune_rounded),
+                          ),
+                        ],
                       ),
-                      OutlinedButton.icon(
-                        key: const ValueKey('continue-button'),
-                        onPressed: model.hasSavedRun
-                            ? () => _drive(context, model, resume: true)
-                            : null,
-                        icon: const Icon(Icons.play_arrow_rounded),
-                        label: const Text('Continue'),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 480),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Eyebrow('YOUR ROAD. YOUR PACE.'),
+                                const SizedBox(height: 8),
+                                Text(
+                                  roadFor(model.selectedMap).name,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displaySmall
+                                      ?.copyWith(
+                                        fontSize: bounds.maxHeight < 430
+                                            ? 32
+                                            : 44,
+                                      ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  model.selectedCar == 'mercedes-w14'
+                                      ? 'Mercedes-AMG W14 / Ready'
+                                      : 'McLaren MCL38 / Ready',
+                                  style: const TextStyle(
+                                    color: pine,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children: [
+                                    FilledButton.icon(
+                                      key: const ValueKey('start-button'),
+                                      onPressed: () => _drive(context, model),
+                                      icon: const Icon(
+                                        Icons.play_arrow_rounded,
+                                        size: 26,
+                                      ),
+                                      label: const Text('START DRIVE'),
+                                    ),
+                                    OutlinedButton.icon(
+                                      key: const ValueKey('continue-button'),
+                                      onPressed: model.hasSavedRun
+                                          ? () => _drive(
+                                              context,
+                                              model,
+                                              resume: true,
+                                            )
+                                          : null,
+                                      icon: const Icon(
+                                        Icons.restore_rounded,
+                                        size: 20,
+                                      ),
+                                      label: const Text('Continue'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  model.hasSavedRun
+                                      ? 'Saved checkpoint · ${roadFor(model.savedRun!['mapId'] as String).name}'
+                                      : 'Hold the accelerator. Pause anytime.',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                if (model.storageWarning != null) ...[
+                                  const SizedBox(height: 8),
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Text(model.storageWarning!),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 8,
+                        children: [
+                          _MenuLink(
+                            key: const ValueKey('roads-button'),
+                            label: 'Roads',
+                            icon: Icons.route_rounded,
+                            onTap: () =>
+                                _open(context, RoadsScreen(model: model)),
+                          ),
+                          _MenuLink(
+                            label: 'Garage',
+                            icon: Icons.sports_motorsports_outlined,
+                            onTap: () =>
+                                _open(context, GarageScreen(model: model)),
+                          ),
+                          _MenuLink(
+                            label: 'Crew',
+                            icon: Icons.groups_2_outlined,
+                            onTap: () =>
+                                _open(context, CharactersScreen(model: model)),
+                          ),
+                          _MenuLink(
+                            label: 'Help',
+                            icon: Icons.help_outline_rounded,
+                            onTap: () =>
+                                _open(context, HowToPlayScreen(model: model)),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  if (!compact || model.hasSavedRun) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      model.hasSavedRun
-                          ? 'Continue ${roadFor(model.savedRun!['mapId'] as String).name} from your last gate.'
-                          : 'Your next checkpoint will make a place to come back to.',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ],
-              );
-              final scene = _StarterScene(
-                reducedMotion: model.reducedMotion,
-                height: compact ? 180 : 252,
-              );
-              if (constraints.maxWidth < 700) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [intro, const SizedBox(height: 24), scene],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(flex: 6, child: intro),
-                  const SizedBox(width: 32),
-                  Expanded(flex: 5, child: scene),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 28),
-          const Divider(height: 1),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _MenuLink(
-                label: 'Garage',
-                icon: Icons.sports_motorsports_outlined,
-                onTap: () => _open(context, GarageScreen(model: model)),
+                ),
               ),
-              _MenuLink(
-                label: 'Characters',
-                icon: Icons.groups_2_outlined,
-                onTap: () => _open(context, CharactersScreen(model: model)),
-              ),
-              _MenuLink(
-                label: 'Options',
-                icon: Icons.tune_rounded,
-                onTap: () => _open(context, OptionsScreen(model: model)),
-              ),
-              _MenuLink(
-                label: 'How to play',
-                icon: Icons.menu_book_outlined,
-                onTap: () => _open(context, HowToPlayScreen(model: model)),
-              ),
-            ],
-          ),
-          if (model.storageWarning != null) ...[
-            const SizedBox(height: 16),
-            Semantics(liveRegion: true, child: Text(model.storageWarning!)),
-          ],
-          const SizedBox(height: 18),
-          const Text(
-            'A small driving adventure by Waqar Ahmed. Built for the road, not a leaderboard.',
-            style: TextStyle(fontSize: 12, color: muted),
+            ),
           ),
         ],
       ),
@@ -267,6 +319,7 @@ class StarterScreen extends StatelessWidget {
 
 class _MenuLink extends StatelessWidget {
   const _MenuLink({
+    super.key,
     required this.label,
     required this.icon,
     required this.onTap,
@@ -278,156 +331,14 @@ class _MenuLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) => OutlinedButton.icon(
     onPressed: onTap,
-    icon: Icon(icon, size: 20),
+    style: OutlinedButton.styleFrom(
+      backgroundColor: const Color(0xB30F1D26),
+      side: const BorderSide(color: Color(0x604B626E)),
+      minimumSize: const Size(48, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    ),
+    icon: Icon(icon, size: 19),
     label: Text(label),
-  );
-}
-
-class _StarterScene extends StatelessWidget {
-  const _StarterScene({required this.reducedMotion, this.height = 252});
-  final bool reducedMotion;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: Container(
-      height: height,
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE7EDDE),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Stack(
-        children: [
-          const Positioned(
-            top: 14,
-            right: 22,
-            child: AssetArt('cartoon-pack/sun.svg', size: 52),
-          ),
-          const Positioned(
-            top: 18,
-            left: 20,
-            child: AssetArt('cartoon-pack/clouds.svg', size: 104),
-          ),
-          Positioned(
-            bottom: 40,
-            left: 10,
-            child: AssetArt(
-              'cartoon-pack/mountain-range.svg',
-              size: height < 200 ? 150 : 204,
-            ),
-          ),
-          const Positioned(
-            bottom: 42,
-            right: 12,
-            child: AssetArt('cartoon-pack/pine-tree.svg', size: 116),
-          ),
-          Positioned(
-            left: -4,
-            right: -4,
-            bottom: 12,
-            child: Container(height: 54, color: pine),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 37,
-            child: LayoutBuilder(
-              builder: (_, bounds) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: List.generate(
-                  (bounds.maxWidth / 46).floor().clamp(1, 30).toInt(),
-                  (_) => Container(
-                    width: 21,
-                    height: 2,
-                    color: const Color(0xFFEEE4C7),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 26,
-            child: F1Motion(reducedMotion: reducedMotion),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-/// Only this small leaf repaints for the starter animation.
-class F1Motion extends StatefulWidget {
-  const F1Motion({super.key, required this.reducedMotion});
-  final bool reducedMotion;
-
-  @override
-  State<F1Motion> createState() => _F1MotionState();
-}
-
-class _F1MotionState extends State<F1Motion>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 5),
-  );
-
-  void _sync() {
-    final disabled =
-        widget.reducedMotion || MediaQuery.disableAnimationsOf(context);
-    if (disabled) {
-      _controller.stop();
-      _controller.value = .48;
-    } else if (!_controller.isAnimating) {
-      _controller.repeat();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(F1Motion oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _sync();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => RepaintBoundary(
-    child: LayoutBuilder(
-      builder: (context, bounds) => AnimatedBuilder(
-        animation: _controller,
-        child: SizedBox(
-          width: 118,
-          height: 50,
-          child: SvgPicture.asset(
-            '${artRoot}branding/f1-loading-car.svg',
-            fit: BoxFit.contain,
-          ),
-        ),
-        builder: (_, child) => Align(
-          alignment: Alignment.centerLeft,
-          child: Transform.translate(
-            offset: Offset(
-              -124 + (bounds.maxWidth + 248) * _controller.value,
-              0,
-            ),
-            child: child,
-          ),
-        ),
-      ),
-    ),
   );
 }
 
@@ -496,11 +407,11 @@ class _RoadRow extends StatelessWidget {
     selected: selected,
     label: '${road.name}. ${road.tagline}',
     child: Material(
-      color: selected ? const Color(0xFFE4EBDC) : paper,
+      color: selected ? selectedSurface : paper,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: selected ? pine : rule,
+          color: selected ? orange : rule,
           width: selected ? 2 : 1,
         ),
       ),
@@ -523,7 +434,7 @@ class _RoadRow extends StatelessWidget {
                         ),
                       ),
                       if (selected)
-                        const Icon(Icons.check_circle, color: pine, size: 22),
+                        const Icon(Icons.check_circle, color: orange, size: 22),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -680,7 +591,7 @@ class _PaintChoice extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: selected ? pine : rule,
+              color: selected ? orange : rule,
               width: selected ? 2 : 1,
             ),
           ),
@@ -692,7 +603,7 @@ class _PaintChoice extends StatelessWidget {
             child: selected
                 ? Icon(
                     Icons.check_rounded,
-                    color: hex == '#334c41' ? paper : pine,
+                    color: hex == '#334c41' ? pine : cream,
                   )
                 : null,
           ),
@@ -780,11 +691,11 @@ class _SelectionTile extends StatelessWidget {
     selected: selected,
     button: true,
     child: Material(
-      color: selected ? const Color(0xFFE4EBDC) : paper,
+      color: selected ? selectedSurface : paper,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: BorderSide(
-          color: selected ? pine : rule,
+          color: selected ? orange : rule,
           width: selected ? 2 : 1,
         ),
       ),
@@ -1056,7 +967,7 @@ class HowToPlayScreen extends StatelessWidget {
         const _GuideStep(
           '01',
           'Take your seat',
-          'Choose a road, a car and a member of the crew. Select arrows, a drag-to-turn wheel or phone tilt in Options. Play in landscape with both hands on the phone.',
+          'Tap Start drive to play immediately. Use Roads or Garage to change your setup. Select arrows, a drag-to-turn wheel or phone tilt in Options. Play in landscape with both hands on the phone.',
           'cartoon-pack/steering-wheel.svg',
         ),
         const _GuideStep(
@@ -1086,7 +997,7 @@ class HowToPlayScreen extends StatelessWidget {
         const _GuideStep(
           '06',
           'A mistake is a new try',
-          'If the car leaves the road, recovery returns you to a checkpoint. Use Reset if you are stuck. Pause before putting the phone down; Continue returns to your saved gate, not an exact mid-air position.',
+          'If the car leaves the road, recovery returns you to a checkpoint. Use Recover if you are stuck. Tap Pause to take a break, or Stop to save and return to the lobby. Continue returns to your last saved gate.',
           'cartoon-pack/restart-button.svg',
         ),
         const _GuideStep(
@@ -1120,7 +1031,7 @@ class HowToPlayScreen extends StatelessWidget {
             onPressed: () => showAboutDialog(
               context: context,
               applicationName: 'Windway',
-              applicationVersion: 'Android demo 1.0.0',
+              applicationVersion: 'Android 1.1.0',
               applicationLegalese:
                   'An independent, non-commercial learning project by Waqar Ahmed.',
               children: const [
@@ -1174,7 +1085,7 @@ class _Note extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: const Color(0xFFE4EBDC),
+      color: selectedSurface,
       borderRadius: BorderRadius.circular(14),
     ),
     child: Row(

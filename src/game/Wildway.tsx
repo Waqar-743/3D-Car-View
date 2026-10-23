@@ -11,7 +11,7 @@ import type { DrivingInput } from './driving';
 import ViewerErrorBoundary from '../components/PanoramicViewer/ViewerErrorBoundary';
 import TrackLoader from './TrackLoader';
 import LandingStory from './LandingStory';
-import MobileTouchControls, { MobileDriverBadge } from './MobileTouchControls';
+import MobileTouchControls, { MobileDriverBadge, MobileIcon } from './MobileTouchControls';
 import { installMobileBridge, isNativeGame } from './mobileBridge';
 import './wildway.css';
 import './race-hud.css';
@@ -168,6 +168,7 @@ function HowTo() {
 
 function PauseMenu() {
   const dialog = useRef<HTMLElement>(null);
+  const native = isNativeGame();
   return <div className="modal-scrim"><section ref={dialog} className="pause-card" role="dialog" aria-modal="true" aria-labelledby="pause-title" onKeyDown={(event) => {
     if (event.key !== 'Tab') return;
     const buttons = dialog.current?.querySelectorAll<HTMLButtonElement>('button');
@@ -175,7 +176,13 @@ function PauseMenu() {
     const first = buttons[0], last = buttons[buttons.length - 1];
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  }}><Art name="wild-haired-driver" className="pause-character" /><p className="ww-eyebrow">A VERY WELL-DESERVED PIT STOP</p><h1 id="pause-title">Take a<br /><em>breather.</em></h1><p>Your car and your clock are right where you left them.</p><button className="ww-button ww-primary" autoFocus onClick={() => { void gameAudio.unlock(); useGame.getState().resume(); }}>Back to the madness <span>→</span></button><div className="pause-options"><button onClick={() => { void gameAudio.unlock(); useGame.getState().startRace(); }}>Restart run</button><button onClick={() => useGame.getState().navigate('settings')}>Settings</button><button onClick={() => useGame.getState().navigate('howto')}>How to play</button><button onClick={() => useGame.getState().navigate('garage')}>Return to garage</button></div></section></div>;
+  }}>{native ? <>
+    <span className="mobile-menu-kicker">WINDWAY / PIT STOP</span><h1 id="pause-title">Drive paused</h1><p>Your car is parked. Your clock is stopped.</p>
+    <button className="ww-button ww-primary" autoFocus onClick={() => window.WindwayMobile?.command('resume')}><MobileIcon name="play" />Resume drive</button>
+    <div className="pause-options"><button onClick={() => window.WindwayMobile?.command('restart')}><MobileIcon name="recover" />Restart</button><button onClick={() => window.WindwayMobile?.command('menu')}><MobileIcon name="stop" />Stop drive</button></div>
+    <small className="mobile-menu-note">Stop saves your last checkpoint.</small>
+  </> : <><Art name="wild-haired-driver" className="pause-character" /><p className="ww-eyebrow">A VERY WELL-DESERVED PIT STOP</p><h1 id="pause-title">Take a<br /><em>breather.</em></h1><p>Your car and your clock are right where you left them.</p><button className="ww-button ww-primary" autoFocus onClick={() => { void gameAudio.unlock(); useGame.getState().resume(); }}>Back to the madness <span>→</span></button><div className="pause-options"><button onClick={() => { void gameAudio.unlock(); useGame.getState().startRace(); }}>Restart run</button><button onClick={() => useGame.getState().navigate('settings')}>Settings</button><button onClick={() => useGame.getState().navigate('howto')}>How to play</button><button onClick={() => useGame.getState().navigate('garage')}>Return to garage</button></div></>}
+  </section></div>;
 }
 
 function Results() {
@@ -186,7 +193,7 @@ function Results() {
     {!reducedMotion && <div className="confetti" aria-hidden="true">{Array.from({ length: 24 }, (_, i) => <i key={i} style={{ '--i': i, '--color': [map.theme.accent, map.theme.leaf, map.theme.paper, map.theme.water][i % 4] } as CSSProperties} />)}</div>}
     <Art name="winner-trophy" className="results-trophy" /><span className="result-badge">{result.newBest ? 'A FRESH PERSONAL BEST' : snow ? 'SUMMIT CONQUERED' : jungle ? 'CANOPY CONQUERED' : 'VALLEY CONQUERED'}</span><h1 data-page-title tabIndex={-1}>{snow ? <>You took<br />the <em>high road.</em></> : <>Well, that<br />was <em>wild.</em></>}</h1><p>{car.name} · {map.name} · {snow ? 'summit climb' : `${result.laps} ${result.laps === 1 ? 'lap' : 'laps'}`}</p><strong className="result-time">{formatTime(result.time)}</strong>
     <div className="result-details"><div><span>PREVIOUS {snow ? 'SUMMIT' : jungle ? 'JUNGLE' : 'ALPINE'} BEST</span><strong>{result.previousBest ? formatTime(result.previousBest) : 'Your very first finish'}</strong></div><div><span>ROAD RECOVERIES</span><strong>{String(result.resets).padStart(2, '0')}</strong></div></div>
-    <StartButton>One more for the road</StartButton><button className="back-link" onClick={() => useGame.getState().navigate('garage')}>Try a different attitude →</button>
+    {isNativeGame() ? <><button className="ww-button ww-primary" onClick={() => window.WindwayMobile?.command('restart')}><MobileIcon name="play" />Drive again</button><button className="back-link" onClick={() => window.WindwayMobile?.command('menu')}>Back to garage</button></> : <><StartButton>One more for the road</StartButton><button className="back-link" onClick={() => useGame.getState().navigate('garage')}>Try a different attitude →</button></>}
   </section></main>;
 }
 
@@ -207,7 +214,7 @@ function RaceHUD() {
     <aside className="race-dashboard" aria-label="Race information">
       <header className="race-header">
         <div className="race-wordmark">WINDWAY<span>{map.name.toUpperCase()}</span></div>
-        <button className="hud-button pause-button" aria-label="Pause race" disabled={status !== 'running'} onClick={() => useGame.getState().pause()}><Art name="pause-button" /><span>PAUSE <kbd>ESC</kbd></span></button>
+        <button className="hud-button pause-button" aria-label="Pause race" disabled={isNativeGame() ? !['running', 'countdown', 'recovering'].includes(status) : status !== 'running'} onClick={() => isNativeGame() ? window.WindwayMobile?.command('pause') : useGame.getState().pause()}>{isNativeGame() ? <MobileIcon name="pause" /> : <Art name="pause-button" />}<span>PAUSE <kbd>ESC</kbd></span></button>
       </header>
       <div className="race-stats">
         <div className="lap-clock"><span>{map.mode === 'ascent' ? 'CLIMB TIME' : map.laps > 1 ? 'TOTAL RACE TIME' : 'LAP TIME'}</span><strong>{formatTime(data.elapsed)}</strong><small>{best ? `BEST ${formatTime(best)}` : 'YOUR FIRST TIME AROUND'}</small></div>
@@ -243,7 +250,7 @@ export default function Windway() {
   const racing = page === 'race' || page === 'results';
   useEffect(() => () => gameAudio.close(), []);
   useEffect(() => installMobileBridge(), []);
-  useEffect(() => installDrivingInput(() => { const state = useGame.getState(); if (state.page === 'race') { if (state.status === 'paused') state.resume(); else state.pause(); } }, () => useGame.getState().resetCar(), () => useGame.getState().toggleCamera(), () => { const state = useGame.getState(); return state.page === 'race' && ['running', 'countdown'].includes(state.status); }), []);
+  useEffect(() => installDrivingInput(() => { const state = useGame.getState(); if (state.page === 'race') { if (isNativeGame()) window.WindwayMobile?.command(state.status === 'paused' ? 'resume' : 'pause'); else if (state.status === 'paused') state.resume(); else state.pause(); } }, () => useGame.getState().resetCar(), () => useGame.getState().toggleCamera(), () => { const state = useGame.getState(); return state.page === 'race' && ['running', 'countdown'].includes(state.status); }), []);
   useEffect(() => { if (status !== 'running') { clearInput(); gameAudio.stop(); } else if (document.visibilityState === 'hidden') useGame.getState().pause(); }, [status]);
   useEffect(() => {
     if (status !== 'countdown') return;
@@ -268,7 +275,7 @@ export default function Windway() {
   return <div className={`wildway map-${map.id} page-${page} ${reducedMotion ? 'calm-motion' : ''}`}>
     {page !== 'home' && <div className={`scene-shell ${['settings', 'howto', 'map'].includes(page) ? 'scene-muted' : ''}`} aria-label={`Interactive 3D ${map.region}`}><ViewerErrorBoundary resetKey={String(attempt)} onError={(issue) => useGame.getState().setError(issue.message || 'This world could not load. Please try again.')}><Suspense fallback={page === 'race' ? null : <div className="scene-loadscreen"><TrackLoader label={`Opening ${map.name}…`} reducedMotion={reducedMotion} /></div>}><GameScene attempt={attempt} /></Suspense></ViewerErrorBoundary></div>}
     {!racing && page !== 'home' && <Header />}
-    {page === 'home' && <Home />}{page === 'garage' && <Garage />}{page === 'map' && <Valley />}{page === 'settings' && <SettingsPage />}{page === 'howto' && <HowTo />}{page === 'race' && <RaceHUD />}{page === 'results' && <Results />}
+    {page === 'home' && !isNativeGame() && <Home />}{page === 'garage' && <Garage />}{page === 'map' && <Valley />}{page === 'settings' && <SettingsPage />}{page === 'howto' && <HowTo />}{page === 'race' && <RaceHUD />}{page === 'results' && <Results />}
     {error && <div className="modal-scrim"><section className="error-card" role="alert"><Art name="crying-driver" /><p className="ww-eyebrow">A SMALL BUMP IN THE ROAD</p><h1>This world needs<br />another try.</h1><p>{error}</p><button className="ww-button ww-primary" onClick={() => { useGame.getState().setError(null); useGame.getState().setReady(false); useGame.getState().navigate('home'); setAttempt((value) => value + 1); }}>Try again <span>↗</span></button></section></div>}
   </div>;
 }

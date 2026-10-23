@@ -2,11 +2,32 @@ import { useEffect, useRef, useState } from 'react';
 import { clearInput, drivingInput } from './input';
 import { useMobileConfig } from './mobileBridge';
 import type { DrivingInput } from './driving';
+import { useGame } from './store';
+
+export function MobileIcon({ name }: { name: 'stop' | 'camera' | 'recover' | 'pause' | 'play' | 'left' | 'right' | 'pedal' }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {name === 'stop' ? <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none" />
+      : name === 'pause' ? <><path d="M8 5v14M16 5v14" strokeWidth="4" /></>
+      : name === 'play' ? <path d="m8 5 11 7-11 7Z" fill="currentColor" stroke="none" />
+      : name === 'camera' ? <><path d="M8 7 10 4h4l2 3h4v13H4V7Z" /><circle cx="12" cy="13" r="3.3" /></>
+      : name === 'recover' ? <><path d="M4 10a8 8 0 1 1 1.5 8M4 4v6h6" /></>
+      : name === 'left' ? <path d="m14 5-7 7 7 7" strokeWidth="2.5" />
+      : name === 'right' ? <path d="m10 5 7 7-7 7" strokeWidth="2.5" />
+      : <><rect x="7" y="3" width="10" height="18" rx="3" /><path d="M10 7h4M10 11h4M10 15h4" /></>}
+  </svg>;
+}
 
 export function MobileDriverBadge() {
   const { character } = useMobileConfig();
+  const status = useGame((state) => state.status);
+  const camera = useGame((state) => state.cameraMode);
   const pack = character === 'snowman' ? 'snow-pack' : 'jungle-pack';
-  return <div className="mobile-driver-badge"><img src={`${import.meta.env.BASE_URL}${pack}/${character}.svg`} alt="" width="32" height="32" /><span>{character === 'snowman' ? 'SNOWMAN' : character.toUpperCase()}</span><button aria-label="Save checkpoint and return to app menu" onClick={() => window.WindwayMobile?.command('menu')}>MENU</button></div>;
+  return <div className="mobile-driver-badge" aria-label="Drive controls">
+    <button className="mobile-stop" aria-label="Stop drive and save checkpoint" onClick={() => window.WindwayMobile?.command('menu')}><MobileIcon name="stop" /><span>STOP</span></button>
+    <button aria-label={`Switch to ${camera === 'chase' ? 'hood' : 'chase'} camera`} disabled={status !== 'running'} onClick={() => window.WindwayMobile?.command('camera')}><MobileIcon name="camera" /></button>
+    <button aria-label="Recover car to the last checkpoint" disabled={status !== 'running'} onClick={() => window.WindwayMobile?.command('recover')}><MobileIcon name="recover" /></button>
+    <img src={`${import.meta.env.BASE_URL}${pack}/${character}.svg`} alt={`${character} driving companion`} width="32" height="32" />
+  </div>;
 }
 
 function Pedal({ action, children, label, className = '' }: { action: Exclude<keyof DrivingInput, 'steering'>; children: React.ReactNode; label: string; className?: string }) {
@@ -35,7 +56,7 @@ function SteeringWheel() {
       if (wheel.current) wheel.current.style.transform = `rotate(${total.current}rad)`;
     }} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}
     onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); drivingInput.steering = event.key === 'ArrowLeft' ? 0.7 : -0.7; } }} onKeyUp={release} onBlur={release}>
-    <svg ref={wheel} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="var(--hud-panel)" stroke="var(--paper)" strokeWidth="9" /><path d="M16 40h68M50 50v35" stroke="var(--paper)" strokeWidth="9" /><circle cx="50" cy="48" r="13" fill="var(--hud-accent)" /><path d="M50 10v7" stroke="var(--hud-accent)" strokeWidth="7" /></svg>
+    <svg ref={wheel} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="var(--hud-panel)" stroke="var(--hud-text)" strokeOpacity=".75" strokeWidth="7" /><path d="M16 40h68M50 50v35" stroke="var(--hud-text)" strokeOpacity=".6" strokeWidth="7" /><circle cx="50" cy="48" r="13" fill="var(--hud-panel)" stroke="var(--hud-text)" strokeWidth="2" /><path d="M50 10v7" stroke="var(--hud-accent)" strokeWidth="5" /></svg>
   </div>;
 }
 export default function MobileTouchControls() {
@@ -44,8 +65,8 @@ export default function MobileTouchControls() {
   return <div className={`touch-controls mobile-controls mobile-controls-${steeringMode}`}>
     <div className="mobile-steering-cluster">
       <Pedal action="handbrake" label="Hold handbrake" className="touch-drift">DRIFT</Pedal>
-      {steeringMode === 'wheel' ? <SteeringWheel /> : steeringMode === 'tilt' ? <div className="mobile-tilt-controls"><span>TILT TO STEER</span><button className="touch-button" onClick={() => window.WindwayMobile?.command('calibrate')}>CENTER PHONE</button></div> : <div className="mobile-arrow-controls"><Pedal action="left" label="Steer left">←</Pedal><Pedal action="right" label="Steer right">→</Pedal></div>}
+      {steeringMode === 'wheel' ? <SteeringWheel /> : steeringMode === 'tilt' ? <div className="mobile-tilt-controls"><span>TILT TO STEER</span><button className="touch-button" onClick={() => window.WindwayMobile?.command('calibrate')}>CENTER PHONE</button></div> : <div className="mobile-arrow-controls"><Pedal action="left" label="Steer left"><MobileIcon name="left" /></Pedal><Pedal action="right" label="Steer right"><MobileIcon name="right" /></Pedal></div>}
     </div>
-    <div className="touch-pedals"><Pedal action="brake" label="Brake or reverse" className="touch-brake">BRAKE</Pedal><Pedal action="throttle" label="Accelerate" className="touch-throttle">GO</Pedal></div>
+    <div className="touch-pedals"><Pedal action="brake" label="Brake or reverse" className="touch-brake"><MobileIcon name="pedal" /><span>BRAKE</span></Pedal><Pedal action="throttle" label="Accelerate" className="touch-throttle"><MobileIcon name="pedal" /><span>GO</span></Pedal></div>
   </div>;
 }

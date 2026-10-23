@@ -15,7 +15,17 @@ Future<void> main() async {
   });
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: cream,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   final model = await AppModel.load();
   runApp(WindwayApp(model: model));

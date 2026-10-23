@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Test game, website and mobile bridge
-        run: npm exec tsc -- --noEmit && npm run test:game && npm run test:site && node scripts/test-mobile-bridge.mjs
+        run: npm exec tsc -- --noEmit && npm run test:game && npm run test:site && npm run test:android:bridge
 
       - name: Prepare mobile SVGs and launcher icons
         run: node scripts/prepare-android-assets.mjs

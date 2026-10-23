@@ -100,7 +100,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       }
       final controller = WebViewController();
       await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
-      await controller.setBackgroundColor(cream);
+      await controller.setBackgroundColor(Colors.transparent);
       await controller.enableZoom(false);
       if (controller.platform is AndroidWebViewController) {
         final android = controller.platform as AndroidWebViewController;
@@ -339,18 +339,18 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     final leave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Park this drive?'),
+        title: const Text('Drive paused'),
         content: const Text(
-          'Your last earned checkpoint is saved. Continue from that gate next time.',
+          'Resume now, or stop and keep your last checkpoint for next time.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep driving'),
+            child: const Text('Resume drive'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save & leave'),
+            child: const Text('Stop & save'),
           ),
         ],
       ),
@@ -396,70 +396,74 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       if (!didPop) unawaited(_back());
     },
     child: Scaffold(
-      backgroundColor: pine,
-      body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (_controller != null)
-              WebViewWidget(
-                key: ObjectKey(_controller),
-                controller: _controller!,
-              ),
-            if (_loading || _error != null)
-              ColoredBox(
-                color: cream,
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/art/branding/f1-loading-car.svg',
-                            width: 160,
-                            height: 68,
-                            excludeFromSemantics: true,
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            _error == null
-                                ? 'Finding your starting line…'
-                                : 'A small bump in the road.',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _error ??
-                                'Loading the bundled road and your car. No internet download needed.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          if (_error == null)
-                            const LinearProgressIndicator(
-                              semanticsLabel: 'Preparing the offline game',
-                            )
-                          else
-                            FilledButton(
-                              onPressed: () => unawaited(_boot()),
-                              child: const Text('Try again'),
+      backgroundColor: cream,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (_controller != null)
+            WebViewWidget(
+              key: ObjectKey(_controller),
+              controller: _controller!,
+            ),
+          if (_loading || _error != null)
+            Stack(
+              fit: StackFit.expand,
+              children: [
+                DrivingBackdrop(road: widget.model.selectedMap),
+                const ColoredBox(color: Color(0xAD0B141B)),
+                SafeArea(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset(
+                              'assets/art/branding/f1-loading-car.svg',
+                              width: 160,
+                              height: 68,
+                              excludeFromSemantics: true,
                             ),
-                          const SizedBox(height: 12),
-                          TextButton(
-                            onPressed: () => unawaited(_exit()),
-                            child: const Text('Back to menu'),
-                          ),
-                        ],
+                            const SizedBox(height: 20),
+                            Text(
+                              _error == null
+                                  ? 'Preparing your drive'
+                                  : 'The road could not load',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _error ??
+                                  'Your car and the road are loading. You will be driving in a moment.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            if (_error == null)
+                              const LinearProgressIndicator(
+                                semanticsLabel: 'Preparing the offline game',
+                              )
+                            else
+                              FilledButton(
+                                onPressed: () => unawaited(_boot()),
+                                child: const Text('Try again'),
+                              ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () => unawaited(_exit()),
+                              child: const Text('Back to garage'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
+              ],
+            ),
+        ],
       ),
     ),
   );

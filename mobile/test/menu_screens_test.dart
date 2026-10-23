@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:windway/app_model.dart';
 import 'package:windway/app_theme.dart';
+import 'package:windway/game_page.dart';
 import 'package:windway/menu_screens.dart';
 
 Map<String, dynamic> checkpoint({
@@ -117,7 +118,7 @@ void main() {
   });
 
   testWidgets(
-    'Start opens road details and Continue is disabled without progress',
+    'Start enters gameplay immediately and Continue is disabled without progress',
     (tester) async {
       final model = AppModel.memory();
       await model.update(reducedMotion: true);
@@ -137,16 +138,46 @@ void main() {
       );
       expect(continueButton.onPressed, isNull);
       await tester.tap(find.byKey(const ValueKey('start-button')));
-      await tester.pumpAndSettle();
-      expect(find.text('Choose your road'), findsOneWidget);
-      expect(find.text('Alpine Valley'), findsOneWidget);
-      expect(find.text('Canopy Run'), findsOneWidget);
-      expect(find.text('Frostbite Ascent'), findsOneWidget);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(find.byType(GamePage), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
       model.dispose();
     },
   );
+
+  testWidgets('Roads remains available without blocking immediate play', (
+    tester,
+  ) async {
+    final model = AppModel.memory();
+    await model.update(reducedMotion: true);
+    tester.view.physicalSize = const Size(844, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: windwayTheme(),
+        home: StarterScreen(model: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      Theme.of(tester.element(find.byType(StarterScreen))).brightness,
+      Brightness.dark,
+    );
+    await tester.tap(find.byKey(const ValueKey('roads-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose your road'), findsOneWidget);
+    expect(find.text('Alpine Valley'), findsOneWidget);
+    expect(find.text('Canopy Run'), findsOneWidget);
+    expect(find.text('Frostbite Ascent'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    model.dispose();
+  });
 
   for (final size in [
     const Size(844, 390),

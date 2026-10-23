@@ -107,7 +107,7 @@ export function installMobileBridge() {
       state.navigate('home');
       if (resume) { state.selectMap(resume.mapId); state.selectCar(resume.carId); }
       started = true; lastSave = ''; savedAt = -Infinity;
-      suspended = null; pauseWhenReady = false;
+      suspended = null; pauseWhenReady = false; previousError = null;
       state.startRace(resume ? { checkpoint: resume.checkpoint, lap: resume.lap, elapsed: resume.elapsed, resets: resume.resets } : undefined);
       useGame.setState({ cameraMode: config.cameraMode });
       void gameAudio.unlock();
@@ -121,6 +121,7 @@ export function installMobileBridge() {
         save(true);
       }
       else if (command === 'resume') { clearInput(); pauseWhenReady = false; void gameAudio.unlock(); if (state.status === 'paused' && suspended) { useGame.setState({ status: suspended, page: 'race' }); suspended = null; } else state.resume(); }
+      else if (command === 'restart') { clearInput(); suspended = null; pauseWhenReady = false; previousError = null; void gameAudio.unlock(); state.startRace(); useGame.setState({ cameraMode: config.cameraMode }); }
       else if (command === 'recover') state.resetCar();
       else if (command === 'camera') state.toggleCamera();
       else if (command === 'calibrate') { clearInput(); post({ type: 'calibrate' }); }

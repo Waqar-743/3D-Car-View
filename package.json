@@ -22,7 +22,7 @@
     "android:prepare": "npm run android:prepare:art && npm run android:prepare:web",
     "test:android:assets": "node --max-semi-space-size=4 scripts/test-android-assets.mjs",
     "test:android:web": "node --max-semi-space-size=4 scripts/test-android-web.mjs",
-    "test:android:bridge": "node --max-semi-space-size=4 scripts/test-mobile-bridge.mjs"
+    "test:android:bridge": "node --max-semi-space-size=4 scripts/test-mobile-bridge.mjs && node --max-semi-space-size=4 scripts/test-native-hud.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^9.92.7",
