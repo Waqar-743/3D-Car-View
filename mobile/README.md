@@ -27,6 +27,22 @@ Automatic graphics considers memory and CPU hints instead of treating every phon
 
 Actual frame rate, thermal behavior, touch feel, and tilt calibration still need testing on a physical phone. There is no guaranteed 60 FPS claim. An emulator or a successful APK build does not establish hardware performance.
 
+## Try the mobile game flow on a laptop
+
+From the repository root, run:
+
+```sh
+npm run preview:mobile
+```
+
+Open [the local mobile app](http://127.0.0.1:4186/index.html?native=1). It opens the game lobby instead of automatically entering a race. Start / Continue, Roads, Garage and paint selection, Crew, Settings, Personal bests, How to play, and About are available here. The garage has a local 3D car preview, and every selection is applied to the actual bundled game when you start.
+
+Click inside the drive, then use WASD or the arrow keys. P / Escape pauses, R recovers the car, C switches camera, and Space applies the handbrake. Arrow buttons and the virtual wheel remain available. Stop saves the last earned checkpoint and returns to the lobby; Continue restores that road and car even if you have since browsed other choices. Preferences, checkpoints, and records stay in this browser, separately from the Android app.
+
+Gameplay icons now appear at one-third of their former size, without dark button or instrument boxes. Invisible 44-pixel hit areas keep them easier to press. The minimap and timer are smaller as well. Menu actions retain readable sizes.
+
+This runs the shared gameplay and browser app menus, rather than executing an APK. Android-specific menus, lifecycle behavior and phone tilt still need checking in the installed app. The local preview listens only on this laptop and never changes the published website.
+
 ## Build and run
 
 Use Node.js 20, Flutter **3.47.7 stable**, Java 17, and an installed Android SDK. The Android project targets Android 7.0 / API 24 or newer. From the repository root:
