@@ -23,7 +23,7 @@ export function MobileDriverBadge() {
   const camera = useGame((state) => state.cameraMode);
   const pack = character === 'snowman' ? 'snow-pack' : 'jungle-pack';
   return <div className="mobile-driver-badge" aria-label="Drive controls">
-    <button className="mobile-stop" aria-label="Stop drive and save checkpoint" onClick={() => window.WindwayMobile?.command('menu')}><MobileIcon name="stop" /><span>STOP</span></button>
+    <button className="mobile-stop" aria-label="Stop drive and save checkpoint" onClick={() => window.WindwayMobile?.command('menu')}><span className="mobile-control-mark"><MobileIcon name="stop" /><span>STOP</span></span></button>
     <button aria-label={`Switch to ${camera === 'chase' ? 'hood' : 'chase'} camera`} disabled={status !== 'running'} onClick={() => window.WindwayMobile?.command('camera')}><MobileIcon name="camera" /></button>
     <button aria-label="Recover car to the last checkpoint" disabled={status !== 'running'} onClick={() => window.WindwayMobile?.command('recover')}><MobileIcon name="recover" /></button>
     <img src={`${import.meta.env.BASE_URL}${pack}/${character}.svg`} alt={`${character} driving companion`} width="32" height="32" />
@@ -36,7 +36,7 @@ function Pedal({ action, children, label, className = '' }: { action: Exclude<ke
   useEffect(() => () => { drivingInput[action] = false; }, [action]);
   return <button className={`touch-button ${className}`} aria-label={label} aria-pressed={pressed}
     onPointerDown={(event) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); drivingInput[action] = true; setPressed(true); }}
-    onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release} onContextMenu={(event) => event.preventDefault()}>{children}</button>;
+    onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release} onContextMenu={(event) => event.preventDefault()}><span className="mobile-control-mark">{children}</span></button>;
 }
 function SteeringWheel() {
   const { sensitivity } = useMobileConfig();
@@ -56,7 +56,7 @@ function SteeringWheel() {
       if (wheel.current) wheel.current.style.transform = `rotate(${total.current}rad)`;
     }} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}
     onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); drivingInput.steering = event.key === 'ArrowLeft' ? 0.7 : -0.7; } }} onKeyUp={release} onBlur={release}>
-    <svg ref={wheel} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="var(--hud-panel)" stroke="var(--hud-text)" strokeOpacity=".75" strokeWidth="7" /><path d="M16 40h68M50 50v35" stroke="var(--hud-text)" strokeOpacity=".6" strokeWidth="7" /><circle cx="50" cy="48" r="13" fill="var(--hud-panel)" stroke="var(--hud-text)" strokeWidth="2" /><path d="M50 10v7" stroke="var(--hud-accent)" strokeWidth="5" /></svg>
+    <svg ref={wheel} viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--hud-text)" strokeOpacity=".9" strokeWidth="7" /><path d="M16 40h68M50 50v35" stroke="var(--hud-text)" strokeOpacity=".8" strokeWidth="7" /><circle cx="50" cy="48" r="13" fill="none" stroke="var(--hud-text)" strokeWidth="2" /><path d="M50 10v7" stroke="var(--hud-accent)" strokeWidth="5" /></svg>
   </div>;
 }
 export default function MobileTouchControls() {
@@ -65,7 +65,7 @@ export default function MobileTouchControls() {
   return <div className={`touch-controls mobile-controls mobile-controls-${steeringMode}`}>
     <div className="mobile-steering-cluster">
       <Pedal action="handbrake" label="Hold handbrake" className="touch-drift">DRIFT</Pedal>
-      {steeringMode === 'wheel' ? <SteeringWheel /> : steeringMode === 'tilt' ? <div className="mobile-tilt-controls"><span>TILT TO STEER</span><button className="touch-button" onClick={() => window.WindwayMobile?.command('calibrate')}>CENTER PHONE</button></div> : <div className="mobile-arrow-controls"><Pedal action="left" label="Steer left"><MobileIcon name="left" /></Pedal><Pedal action="right" label="Steer right"><MobileIcon name="right" /></Pedal></div>}
+      {steeringMode === 'wheel' ? <SteeringWheel /> : steeringMode === 'tilt' ? <div className="mobile-tilt-controls"><span>TILT TO STEER</span><button className="touch-button" onClick={() => window.WindwayMobile?.command('calibrate')}><span className="mobile-control-mark">CENTER PHONE</span></button></div> : <div className="mobile-arrow-controls"><Pedal action="left" label="Steer left"><MobileIcon name="left" /></Pedal><Pedal action="right" label="Steer right"><MobileIcon name="right" /></Pedal></div>}
     </div>
     <div className="touch-pedals"><Pedal action="brake" label="Brake or reverse" className="touch-brake"><MobileIcon name="pedal" /><span>BRAKE</span></Pedal><Pedal action="throttle" label="Accelerate" className="touch-throttle"><MobileIcon name="pedal" /><span>GO</span></Pedal></div>
   </div>;
